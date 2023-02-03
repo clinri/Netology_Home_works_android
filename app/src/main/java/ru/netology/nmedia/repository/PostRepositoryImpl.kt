@@ -48,10 +48,50 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     override suspend fun removeById(id: Long) {
-        TODO("Not yet implemented")
+        try {
+            //Сначала удаляем запись в локальной БД.
+            dao.removeById(id)
+            //После удаления из БД отправляем соответствующий запрос в API (HTTP).
+            val response = PostsApi.service.removeById(id)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
     }
 
     override suspend fun likeById(id: Long) {
-        TODO("Not yet implemented")
+        try {
+            //Сначала модифицируем запись в локальной БД.
+            dao.likeById(id)
+            //После удаления из БД отправляем соответствующий запрос в API (HTTP).
+            val response = PostsApi.service.likeById(id)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
+    }
+
+    override suspend fun dislikeById(id: Long) {
+        try {
+            //Сначала модифицируем запись в локальной БД.
+            dao.likeById(id)
+            //После удаления из БД отправляем соответствующий запрос в API (HTTP).
+            val response = PostsApi.service.dislikeById(id)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
     }
 }
