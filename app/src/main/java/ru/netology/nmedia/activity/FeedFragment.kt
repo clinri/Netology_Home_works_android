@@ -1,14 +1,17 @@
 package ru.netology.nmedia.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
@@ -21,6 +24,7 @@ class FeedFragment : Fragment() {
 
     private val viewModel: PostViewModel by activityViewModels()
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -66,6 +70,31 @@ class FeedFragment : Fragment() {
                     .show()
             }
         }
+
+        viewModel.newerCount.observe(viewLifecycleOwner) {
+            println("Newer count: $it")
+            if (it > 0) {
+                binding.fabNewPosts.visibility = View.VISIBLE
+                binding.fabNewPosts.text = "${resources.getString(R.string.new_posts)} ($it)"
+            } else {
+                binding.fabNewPosts.visibility = View.GONE
+            }
+        }
+
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (positionStart == 0) {
+                    binding.list.smoothScrollToPosition(0)
+                }
+            }
+
+        })
+
+        binding.fabNewPosts.setOnClickListener {
+            viewModel.clickOnButtonNewPosts()
+            binding.fabNewPosts.isGone = true
+        }
+
         viewModel.data.observe(viewLifecycleOwner) { state ->
             adapter.submitList(state.posts)
             binding.emptyText.isVisible = state.empty
