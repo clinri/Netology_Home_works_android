@@ -4,10 +4,7 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import okio.IOException
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
@@ -31,7 +28,18 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             }
 
             val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(body.toEntity())
+            //загруженные данные не показываем, если раньше не показывались
+            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
+            if (visibleListIsEmpty) {
+                dao.insert(body.toEntity())
+            } else {
+                val oldData = dao.getAllVisible().asLiveData().value
+                dao.insert(body.toEntity().map {
+                    it.copy(hidden = oldData?.find { oldPostEntity ->
+                        oldPostEntity.id == it.id
+                    }?.hidden ?: true)
+                })
+            }
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {
