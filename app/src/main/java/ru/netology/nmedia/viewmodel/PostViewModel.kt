@@ -2,6 +2,7 @@ package ru.netology.nmedia.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.*
+import arrow.core.Either
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -30,14 +31,29 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val data: LiveData<FeedModel> = repository.data.map(::FeedModel)
         .asLiveData(Dispatchers.Default)
 
-    val newerCount: LiveData<Int> = data.switchMap {
-        val latestPostId = it.posts.firstOrNull()?.id ?: 0L
-        repository.getNewerCount(latestPostId).asLiveData()
-    }
+    private var _newerCount = MutableLiveData<Int>()
 
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
         get() = _dataState
+
+    val newerCount: LiveData<Int> = data.switchMap {
+        val latestPostId = it.posts.firstOrNull()?.id ?: 0L
+        val result: LiveData<Int> = _newerCount
+        val getEither = repository.getNewerCount(latestPostId).asLiveData().value
+        try {
+            when (getEither) {
+                is Either.Left -> throw getEither.value
+                is Either.Right -> _newerCount.value = getEither.value!!
+                else -> {
+                    throw Exception()
+                }
+            }
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
+        }
+        result
+    }
 
     private val edited = MutableLiveData(empty)
     private val _postCreated = SingleLiveEvent<Unit>()
@@ -51,6 +67,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun clickOnButtonNewPosts() = viewModelScope.launch {
         try {
             repository.readAll()
+            _newerCount.value = 0
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
         }
