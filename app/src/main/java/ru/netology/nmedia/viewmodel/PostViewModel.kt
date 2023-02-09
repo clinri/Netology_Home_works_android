@@ -37,20 +37,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
-    val newerCount: LiveData<Int> = data.switchMap {
-        val latestPostId = it.posts.firstOrNull()?.id ?: 0L
-        val result: LiveData<Int> = _newerCount
-        val getEither = repository.getNewerCount(latestPostId).asLiveData().value
-        try {
-            when (getEither) {
-                is Either.Left -> throw getEither.value
-                is Either.Right -> _newerCount.value = getEither.value!!
+    val newerCount: LiveData<Int> = data.switchMap { feedModel ->
+        val latestPostId = feedModel.posts.firstOrNull()?.id ?: 0L
+        val result: MutableLiveData<Int> = _newerCount
+        repository.getNewerCount(latestPostId).map { either ->
+            when (either) {
+                is Either.Left -> {
+                    _dataState.value = FeedModelState(error = true)
+                }
+                is Either.Right -> {
+                    val newerCount = either.value
+                    _newerCount.value = newerCount
+                    result.value = newerCount
+                }
                 else -> {
                     throw Exception()
                 }
             }
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
         }
         result
     }
