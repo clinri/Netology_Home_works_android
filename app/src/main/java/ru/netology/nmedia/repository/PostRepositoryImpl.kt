@@ -5,16 +5,20 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import okio.IOException
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dto.Attachment
+import ru.netology.nmedia.dto.AttachmentType
+import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.entity.toDto
 import ru.netology.nmedia.entity.toEntity
-import ru.netology.nmedia.error.ApiError
-import ru.netology.nmedia.error.NetworkError
-import ru.netology.nmedia.error.UnknownError
+import ru.netology.nmedia.error.*
+import ru.netology.nmedia.model.MediaModel
+import java.io.IOException
 
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
@@ -88,6 +92,23 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
+    override suspend fun saveWithAttachment(post: Post, mediaModel: MediaModel) {
+        try {
+            val media = uploadMedia(mediaModel)
+            //TODO: add support for other types
+            val postWithAttachment =
+                post.copy(attachment = Attachment(media.id, AttachmentType.IMAGE))
+            save(postWithAttachment)
+        } catch (e: AppError) {
+            throw e
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
+    }
+
+
     override suspend fun removeById(id: Long) {
         try {
             //Сначала удаляем запись в локальной БД.
@@ -142,5 +163,23 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         } catch (e: Exception) {
             throw UnknownError
         }
+    }
+
+    override suspend fun uploadMedia(media: MediaModel): Media = try {
+        val part = MultipartBody.Part.createFormData(
+            name = "file",
+            filename = media.file.name,
+            body = media.file.asRequestBody()
+        )
+        val response = PostsApi.service.uploadMedia(part)
+        if (!response.isSuccessful) {
+            throw ApiError(response.code(), response.message())
+        }
+
+        response.body() ?: throw ApiError(response.code(), response.message())
+    } catch (e: IOException) {
+        throw NetworkError
+    } catch (e: Exception) {
+        throw UnknownError
     }
 }
