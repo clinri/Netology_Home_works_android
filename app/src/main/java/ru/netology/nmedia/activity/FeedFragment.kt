@@ -86,7 +86,7 @@ class FeedFragment : Fragment() {
             println("Newer count: $it")
             if (it > 0) {
                 binding.fabNewPosts.visibility = View.VISIBLE
-                binding.fabNewPosts.text = "${resources.getString(R.string.new_posts)} ($it)"
+                binding.fabNewPosts.text = getString(R.string.new_posts, it)
             } else {
                 binding.fabNewPosts.visibility = View.GONE
             }
