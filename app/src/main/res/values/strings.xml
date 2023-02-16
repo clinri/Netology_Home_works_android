@@ -20,5 +20,6 @@
     <string name="notification_user_liked">User %1$s liked %2$s\'s post</string>
     <string name="channel_remote_name">Server notifications</string>
     <string name="channel_remote_description">Notifications from remote server</string>
-    <string name="new_posts" translatable="false">New Posts</string>
+    <string name="new_posts" translatable="false">New Posts (%d)</string>
+    <string name="error_get_newer_posts" translatable="false">Error get newer posts</string>
 </resources>

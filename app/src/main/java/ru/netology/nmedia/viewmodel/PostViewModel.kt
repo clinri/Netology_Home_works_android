@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.lifecycle.*
 import arrow.core.Either
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
@@ -31,32 +33,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val data: LiveData<FeedModel> = repository.data.map(::FeedModel)
         .asLiveData(Dispatchers.Default)
 
-    private var _newerCount = MutableLiveData<Int>()
-
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
-    val newerCount: LiveData<Int> = data.switchMap { feedModel ->
-        val latestPostId = feedModel.posts.firstOrNull()?.id ?: 0L
-        val result: MutableLiveData<Int> = _newerCount
-        repository.getNewerCount(latestPostId).map { either ->
-            when (either) {
-                is Either.Left -> {
-                    _dataState.value = FeedModelState(error = true)
-                }
-                is Either.Right -> {
-                    val newerCount = either.value
-                    _newerCount.value = newerCount
-                    result.value = newerCount
-                }
-                else -> {
-                    throw Exception()
-                }
-            }
-        }
-        result
-    }
+    val newerCount = repository.newerCount.asLiveData()
+
+    private val _errorGetNewer = SingleLiveEvent<Unit>()
+    val errorGetNewer: LiveData<Unit>
+        get() = _errorGetNewer
 
     private val edited = MutableLiveData(empty)
     private val _postCreated = SingleLiveEvent<Unit>()
@@ -65,12 +50,27 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadPosts()
+        viewModelScope.launch {
+            repository.data.flatMapLatest { posts ->
+                val latestPostId = posts.firstOrNull()?.id ?: 0L
+                repository.requestNewer(latestPostId).mapNotNull { either ->
+                    when (either) {
+                        is Either.Left -> {
+                            either.value
+                        }
+                        is Either.Right -> null
+                    }
+                }
+            }.collect {
+                // уведомление об ошибке при загрузке новых постов
+                _errorGetNewer.value = Unit
+            }
+        }
     }
 
     fun clickOnButtonNewPosts() = viewModelScope.launch {
         try {
             repository.readAll()
-            _newerCount.value = 0
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
         }

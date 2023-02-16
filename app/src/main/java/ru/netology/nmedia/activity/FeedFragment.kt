@@ -73,10 +73,19 @@ class FeedFragment : Fragment() {
             println("Newer count: $it")
             if (it > 0) {
                 binding.fabNewPosts.visibility = View.VISIBLE
-                binding.fabNewPosts.text = "${resources.getString(R.string.new_posts)} ($it)"
+                binding.fabNewPosts.text = getString(R.string.new_posts, it)
             } else {
                 binding.fabNewPosts.visibility = View.GONE
             }
+        }
+
+        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.error_get_newer_posts),
+                Snackbar.LENGTH_LONG
+            )
+                .show()
         }
 
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -85,7 +94,6 @@ class FeedFragment : Fragment() {
                     binding.list.smoothScrollToPosition(0)
                 }
             }
-
         })
 
         binding.fabNewPosts.setOnClickListener {

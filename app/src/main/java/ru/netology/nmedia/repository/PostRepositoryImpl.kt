@@ -21,6 +21,8 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
         .flowOn(Dispatchers.Default)
 
+    override val newerCount: Flow<Int> = dao.getUnreadCount()
+
     override suspend fun getAll() {
         try {
             val response = PostsApi.service.getAll()
@@ -48,7 +50,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
-    override fun getNewerCount(latestId: Long): Flow<Either<Exception, Int>> = flow {
+    override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
         while (true) {
             delay(10_000L)
             try {
@@ -60,7 +62,6 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
                 dao.insert(body.toEntity().map {
                     it.copy(hidden = true)
                 })
-                emit(dao.getUnreadCount().right())
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
