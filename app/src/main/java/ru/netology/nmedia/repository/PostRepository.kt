@@ -1,5 +1,6 @@
 package ru.netology.nmedia.repository
 
+import arrow.core.Either
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
@@ -7,7 +8,8 @@ import ru.netology.nmedia.model.MediaModel
 
 interface PostRepository {
     val data: Flow<List<Post>>
-    fun getNewerCount(latestId: Long): Flow<Int>
+    val newerCount: Flow<Int>
+    fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>>
     suspend fun getAll()
     suspend fun save(post: Post)
     suspend fun saveWithAttachment(post: Post, mediaModel: MediaModel)

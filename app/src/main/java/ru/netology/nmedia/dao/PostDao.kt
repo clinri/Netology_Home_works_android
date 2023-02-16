@@ -36,5 +36,5 @@ interface PostDao {
     suspend fun readAll()
 
     @Query("SELECT COUNT(*) FROM PostEntity WHERE hidden = 1")
-    suspend fun getUnreadCount():Int
+    fun getUnreadCount():Flow<Int>
 }

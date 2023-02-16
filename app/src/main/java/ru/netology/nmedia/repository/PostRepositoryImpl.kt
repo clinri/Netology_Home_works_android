@@ -1,6 +1,9 @@
 package ru.netology.nmedia.repository
 
 import androidx.lifecycle.*
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,6 +26,8 @@ import java.io.IOException
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
         .flowOn(Dispatchers.Default)
+
+    override val newerCount: Flow<Int> = dao.getUnreadCount()
 
     override suspend fun getAll() {
         try {
@@ -51,7 +56,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
-    override fun getNewerCount(latestId: Long): Flow<Int> = flow {
+    override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
         while (true) {
             delay(10_000L)
             try {
@@ -59,18 +64,16 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
-
                 val body = response.body() ?: throw ApiError(response.code(), response.message())
                 dao.insert(body.toEntity().map {
                     it.copy(hidden = true)
                 })
-                emit(dao.getUnreadCount())
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
-                throw NetworkError
+                emit(NetworkError.left())
             } catch (e: Exception) {
-                throw UnknownError
+                emit(UnknownError.left())
             }
         }
     }

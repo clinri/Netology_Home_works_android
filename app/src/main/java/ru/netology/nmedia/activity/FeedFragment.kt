@@ -92,13 +92,21 @@ class FeedFragment : Fragment() {
             }
         }
 
+        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.error_get_newer_posts),
+                Snackbar.LENGTH_LONG
+            )
+                .show()
+        }
+
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 if (positionStart == 0) {
                     binding.list.smoothScrollToPosition(0)
                 }
             }
-
         })
 
         binding.fabNewPosts.setOnClickListener {
