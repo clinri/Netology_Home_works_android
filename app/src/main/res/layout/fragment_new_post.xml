@@ -9,35 +9,41 @@
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <EditText
                 android:id="@+id/edit"
-                tools:text="@tools:sample/lorem/random[21]"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:autofillHints=""
                 android:background="@android:color/transparent"
-                android:gravity="start|top"
-                android:inputType="textMultiLine" />
+                android:hint="@string/type_post"
+                android:inputType="textMultiLine"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="text" />
+            <!--                tools:text="@tools:sample/lorem/random[2]"-->
 
             <FrameLayout
-                android:paddingBottom="?actionBarSize"
                 android:id="@+id/preview_container"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/edit">
 
                 <ImageView
                     android:id="@+id/preview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:contentDescription="Photo"
                     android:adjustViewBounds="true"
+                    android:contentDescription="@string/photo"
                     tools:src="@tools:sample/avatars" />
 
                 <com.google.android.material.button.MaterialButton
@@ -45,21 +51,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|bottom"
-                    android:padding="16dp"
-                    android:text="Clear" />
+                    android:text="@string/clear" />
 
             </FrameLayout>
         </LinearLayout>
     </ScrollView>
 
     <LinearLayout
+        android:id="@+id/bottomBar"
         style="@style/Widget.MaterialComponents.BottomAppBar.Colored"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@color/colorAccent"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:background="@color/colorAccent"
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
@@ -67,7 +73,7 @@
             style="@style/Widget.AppTheme.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="Select photo"
+            android:contentDescription="@string/select_photo"
             android:padding="16dp"
             app:icon="@drawable/ic_photo_24dp" />
 
@@ -76,7 +82,7 @@
             style="@style/Widget.AppTheme.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="Take photo"
+            android:contentDescription="@string/take_photo"
             android:padding="16dp"
             app:icon="@drawable/ic_camera_24dp" />
 

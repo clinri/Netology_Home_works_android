@@ -1,15 +1,17 @@
 package ru.netology.nmedia.activity
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.Toolbar
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI.setupWithNavController
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
@@ -19,6 +21,7 @@ import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private lateinit var toolbar: Toolbar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,15 +46,34 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 )
         }
 
-        lifecycleScope
+        toolbar = findViewById(R.id.custom_toolbar)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        setupWithNavController(toolbar, navController, appBarConfiguration)
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.photoFragment -> setToolbarDark()
+                else -> setToolbarLight()
+            }
+        }
 
         checkGoogleApiAvailability()
+    }
+
+    private fun setToolbarLight() {
+        toolbar.setBackgroundColor(Color.CYAN)
+        toolbar.setTitleTextColor(Color.BLACK)
+    }
+
+    private fun setToolbarDark() {
+        toolbar.setBackgroundColor(Color.BLACK)
+        toolbar.setTitleTextColor(Color.WHITE)
+        toolbar.navigationIcon =
+            AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back_24dp)
     }
 
     private fun checkGoogleApiAvailability() {
@@ -64,7 +86,11 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 getErrorDialog(this@AppActivity, code, 9000)?.show()
                 return
             }
-            Toast.makeText(this@AppActivity, R.string.google_play_unavailable, Toast.LENGTH_LONG)
+            Toast.makeText(
+                this@AppActivity,
+                R.string.google_play_unavailable,
+                Toast.LENGTH_LONG
+            )
                 .show()
         }
 

@@ -1,10 +1,18 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="LightAppBar" parent="@android:style/Widget.Holo.Light.ActionBar">
+        <item name="android:background">#FFFFFF</item>
+    </style>
+
+    <style name="BlackAppBar" parent="@android:style/Widget.Holo.ActionBar">
+        <item name="android:background">#000000</item>
     </style>
 
     <style name="Widget.AppTheme.IconButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.Toolbar
 import androidx.core.net.toFile
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -58,7 +59,9 @@ class NewPostFragment : Fragment() {
         arguments?.textArg
             ?.let(binding.edit::setText)
 
-        requireActivity().addMenuProvider(object : MenuProvider {
+        val toolbar = requireActivity().findViewById<Toolbar>(R.id.custom_toolbar)
+
+        toolbar.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_new_post, menu)
             }

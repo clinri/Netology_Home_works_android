@@ -17,9 +17,14 @@ import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.util.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment() {
+
+    companion object {
+        var Bundle.textArg: String? by StringArg
+    }
 
     private val viewModel: PostViewModel by activityViewModels()
 
@@ -57,6 +62,14 @@ class FeedFragment : Fragment() {
                     Intent.createChooser(intent, getString(R.string.chooser_share_post))
                 startActivity(shareIntent)
             }
+
+            override fun onPhoto(post: Post) {
+                findNavController().navigate(
+                    R.id.action_feedFragment_to_photoFragment,
+                    Bundle().apply {
+                        textArg = post.attachment?.url
+                    })
+            }
         })
         binding.list.adapter = adapter
         viewModel.dataState.observe(viewLifecycleOwner) { state ->
@@ -73,7 +86,7 @@ class FeedFragment : Fragment() {
             println("Newer count: $it")
             if (it > 0) {
                 binding.fabNewPosts.visibility = View.VISIBLE
-                binding.fabNewPosts.text = "${resources.getString(R.string.new_posts)} ($it)"
+                binding.fabNewPosts.text = getString(R.string.new_posts, it)
             } else {
                 binding.fabNewPosts.visibility = View.GONE
             }
@@ -103,7 +116,11 @@ class FeedFragment : Fragment() {
         }
 
         binding.fab.setOnClickListener {
-            findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
+            findNavController().navigate(
+                R.id.action_feedFragment_to_newPostFragment,
+                Bundle().apply {
+
+                })
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) {
@@ -112,4 +129,5 @@ class FeedFragment : Fragment() {
 
         return binding.root
     }
+
 }
