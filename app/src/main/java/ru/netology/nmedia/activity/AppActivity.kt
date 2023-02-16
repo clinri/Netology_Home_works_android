@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -55,9 +56,8 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.feedFragment -> setToolbarLight()
-                R.id.newPostFragment -> setToolbarLight()
                 R.id.photoFragment -> setToolbarDark()
+                else -> setToolbarLight()
             }
         }
 
@@ -65,13 +65,15 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     }
 
     private fun setToolbarLight() {
-        toolbar.setBackgroundColor(Color.GREEN)
+        toolbar.setBackgroundColor(Color.CYAN)
         toolbar.setTitleTextColor(Color.BLACK)
     }
 
     private fun setToolbarDark() {
-        toolbar.setBackgroundColor(Color.GRAY)
+        toolbar.setBackgroundColor(Color.BLACK)
         toolbar.setTitleTextColor(Color.WHITE)
+        toolbar.navigationIcon =
+            AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back_24dp)
     }
 
     private fun checkGoogleApiAvailability() {
