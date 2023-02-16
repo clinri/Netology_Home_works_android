@@ -67,6 +67,7 @@ dependencies {
     def coroutines_version = "1.6.4"
     def play_services_base_version = "18.1.0"
     def arrow_version = "1.1.5"
+    def imagepicker_version = "2.1"
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "androidx.core:core-ktx:$core_version"
@@ -95,6 +96,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
     implementation "com.google.android.gms:play-services-base:$play_services_base_version"
     implementation "io.arrow-kt:arrow-core:$arrow_version"
+    implementation "com.github.dhaval2404:imagepicker:$imagepicker_version"
 
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
