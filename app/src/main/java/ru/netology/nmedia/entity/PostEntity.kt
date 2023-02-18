@@ -4,13 +4,13 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import ru.netology.nmedia.dto.Attachment
-import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Post
 
 @Entity
 data class PostEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long,
+    val authorId:Long,
     val author: String,
     val authorAvatar: String,
     val content: String,
@@ -23,6 +23,7 @@ data class PostEntity(
 ) {
     fun toDto() = Post(
         id = id,
+        authorId = authorId,
         author = author,
         authorAvatar = authorAvatar,
         content = content,
@@ -36,6 +37,7 @@ data class PostEntity(
         fun fromDto(dto: Post) =
             PostEntity(
                 id = dto.id,
+                authorId = dto.authorId,
                 author = dto.author,
                 authorAvatar = dto.authorAvatar,
                 content = dto.content,

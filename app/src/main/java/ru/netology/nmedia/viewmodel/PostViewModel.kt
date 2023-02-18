@@ -5,10 +5,12 @@ import android.net.Uri
 import androidx.lifecycle.*
 import arrow.core.Either
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
@@ -22,6 +24,7 @@ import java.io.File
 private val empty = Post(
     id = 0,
     content = "",
+    authorId = 0L,
     author = "",
     authorAvatar = "",
     likedByMe = false,
@@ -33,8 +36,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     // упрощённый вариант
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
-    val data: LiveData<FeedModel> = repository.data.map(::FeedModel)
-        .asLiveData(Dispatchers.Default)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val data: LiveData<FeedModel> = AppAuth.getInstance().data.flatMapLatest { authState ->
+        repository.data
+            .map { posts ->
+                FeedModel(posts.map {
+                    it.copy(ownedByMe = authState?.id == it.authorId)
+                }, posts.isEmpty())
+            }
+    }.asLiveData(Dispatchers.Default)
 
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
@@ -57,6 +67,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     init {
         loadPosts()
         viewModelScope.launch {
+            @OptIn(ExperimentalCoroutinesApi::class)
             repository.data.flatMapLatest { posts ->
                 val latestPostId = posts.firstOrNull()?.id ?: 0L
                 repository.requestNewer(latestPostId).mapNotNull { either ->

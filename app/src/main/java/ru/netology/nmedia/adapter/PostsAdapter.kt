@@ -54,6 +54,8 @@ class PostViewHolder(
                 photo.load("${BuildConfig.BASE_URL}/media/${it.url}")
             }
 
+            menu.isVisible = post.ownedByMe
+
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {
                     inflate(R.menu.options_post)

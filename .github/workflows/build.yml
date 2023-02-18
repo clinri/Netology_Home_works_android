@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, Task_1_Remove_&_likes ]
+    branches: [ master ]
 
 jobs:
   build:
