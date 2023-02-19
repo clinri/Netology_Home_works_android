@@ -11,6 +11,7 @@ import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.model.AuthModel
 
 private const val BASE_URL = "${BuildConfig.BASE_URL}/api/slow/"
 
@@ -23,7 +24,7 @@ private val logging = HttpLoggingInterceptor().apply {
 private val okhttp = OkHttpClient.Builder()
     .addInterceptor(logging)
     .addInterceptor{ chain ->
-        val request = AppAuth.getInstance().data.value?.token?.let {
+        val request = AppAuth.getInstance().authStateFlow.value?.token?.let {
             chain.request().newBuilder()
                 .addHeader("Authorization", it)
                 .build()
@@ -63,6 +64,10 @@ interface PostsApiService {
     @Multipart
     @POST("media")
     suspend fun uploadMedia(@Part media: MultipartBody.Part): Response<Media>
+
+    @FormUrlEncoded
+    @POST("users/authentication")
+    suspend fun updateUser(@Field("login") login: String, @Field("pass") pass: String): Response<AuthModel>
 }
 
 object PostsApi {

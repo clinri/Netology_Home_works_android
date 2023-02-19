@@ -9,26 +9,25 @@ import ru.netology.nmedia.model.AuthModel
 class AppAuth private constructor(context: Context) {
     private val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
 
-    private val _data: MutableStateFlow<AuthModel?>
-
+    private val _authStateFlow: MutableStateFlow<AuthModel?>
 
     init {
         val token = prefs.getString(TOKEN_KEY, null)
         val id = prefs.getLong(ID_KEY, 0)
 
         if (token == null || id == 0L) {
-            _data = MutableStateFlow(null)
+            _authStateFlow = MutableStateFlow(null)
             prefs.edit { clear() }
         } else {
-            _data = MutableStateFlow(AuthModel(id, token))
+            _authStateFlow = MutableStateFlow(AuthModel(id, token))
         }
     }
 
-    val data = _data.asStateFlow()
+    val authStateFlow = _authStateFlow.asStateFlow()
 
     @Synchronized
     fun setAuth(id: Long, token: String) {
-        _data.value = AuthModel(id, token)
+        _authStateFlow.value = AuthModel(id, token)
         prefs.edit {
             putLong(ID_KEY, id)
             putString(TOKEN_KEY, token)
@@ -37,7 +36,7 @@ class AppAuth private constructor(context: Context) {
 
     @Synchronized
     fun removeAuth() {
-        _data.value = null
+        _authStateFlow.value = null
         prefs.edit {
             clear()
         }

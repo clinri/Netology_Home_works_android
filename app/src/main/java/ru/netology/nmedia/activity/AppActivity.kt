@@ -29,6 +29,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var toolbar: Toolbar
+    private var previousMenuProvider: MenuProvider? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +69,18 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             }
         }
 
-        val authViewModel by viewModels<AuthViewModel>()
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.feedFragment -> addMenuInMenuProvider()
+                else -> previousMenuProvider?.let(toolbar::removeMenuProvider)
+            }
+        }
 
-        var previousMenuProvider: MenuProvider? = null
+        checkGoogleApiAvailability()
+    }
+
+    private fun addMenuInMenuProvider() {
+        val authViewModel by viewModels<AuthViewModel>()
         authViewModel.data.observe(this) {
             previousMenuProvider?.let(toolbar::removeMenuProvider)
             toolbar.addMenuProvider(object : MenuProvider {
@@ -84,8 +94,9 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
                     when (menuItem.itemId) {
                         R.id.login, R.id.register -> {
-                            // TODO Remove in home work
-                            AppAuth.getInstance().setAuth(5, "x-token")
+                            findNavController(R.id.nav_host_fragment).navigate(
+                                R.id.action_feedFragment_to_authFragment
+                            )
                             true
                         }
                         R.id.logout -> {
@@ -96,8 +107,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     }
             }.also { previousMenuProvider = it })
         }
-
-        checkGoogleApiAvailability()
     }
 
     private fun setToolbarLight() {
@@ -136,8 +145,8 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment)
-        return navController.navigateUp(appBarConfiguration)
+        val navControllerNavigateUp = findNavController(R.id.nav_host_fragment)
+        return navControllerNavigateUp.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
     }
 }

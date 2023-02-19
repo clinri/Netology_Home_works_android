@@ -36,8 +36,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     // упрощённый вариант
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> = AppAuth.getInstance().data.flatMapLatest { authState ->
+    val data: LiveData<FeedModel> = AppAuth.getInstance().authStateFlow.flatMapLatest { authState ->
         repository.data
             .map { posts ->
                 FeedModel(posts.map {

@@ -125,10 +125,7 @@ class FeedFragment : Fragment() {
 
         binding.fab.setOnClickListener {
             findNavController().navigate(
-                R.id.action_feedFragment_to_newPostFragment,
-                Bundle().apply {
-
-                })
+                R.id.action_feedFragment_to_newPostFragment)
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) {
