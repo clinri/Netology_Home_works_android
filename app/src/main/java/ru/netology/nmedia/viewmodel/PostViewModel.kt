@@ -56,6 +56,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorGetNewer = SingleLiveEvent<Unit>()
     val errorGetNewer: LiveData<Unit>
         get() = _errorGetNewer
+
     private val _media = MutableLiveData<MediaModel?>(null)
     val media: LiveData<MediaModel?>
         get() = _media
@@ -64,6 +65,22 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val _postCreated = SingleLiveEvent<Unit>()
     val postCreated: LiveData<Unit>
         get() = _postCreated
+
+    private val _showOfferAuth = SingleLiveEvent<Unit>()
+    val showOfferAuth: LiveData<Unit>
+        get() = _showOfferAuth
+
+    private val _showFragmentPostCreate = SingleLiveEvent<Unit>()
+    val showFragmentPostCreate: LiveData<Unit>
+        get() = _showFragmentPostCreate
+
+    private val _backToFeedFragmentFromDialogConfirmation = SingleLiveEvent<Unit>()
+    val backToFeedFragmentFromDialogConfirmation: LiveData<Unit>
+        get() = _backToFeedFragmentFromDialogConfirmation
+
+    private val _toDialogConfirmationFromNewPostFragment = SingleLiveEvent<Unit>()
+    val toDialogConfirmationFromNewPostFragment: LiveData<Unit>
+        get() = _toDialogConfirmationFromNewPostFragment
 
     init {
         loadPosts()
@@ -94,11 +111,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _media.value = null
     }
 
-    fun clickOnButtonNewPosts() = viewModelScope.launch {
-        try {
-            repository.readAll()
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
+    fun clickOnButtonNewPosts() {
+        AppAuth.getInstance().authStateFlow.value?.let {
+            viewModelScope.launch {
+                try {
+                    repository.readAll()
+                } catch (e: Exception) {
+                    _dataState.value = FeedModelState(error = true)
+                }
+            }
+        } ?: let {
+            _showOfferAuth.value = Unit
         }
     }
 
@@ -153,19 +176,21 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = edited.value?.copy(content = text)
     }
 
-    fun likeById(id: Long) = viewModelScope.launch {
-        try {
-            repository.likeById(id)
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
-        }
-    }
-
-    fun dislikeById(id: Long) = viewModelScope.launch {
-        try {
-            repository.dislikeById(id)
-        } catch (e: Exception) {
-            _dataState.value = FeedModelState(error = true)
+    fun like(post: Post) {
+        AppAuth.getInstance().authStateFlow.value?.let {
+            viewModelScope.launch {
+                try {
+                    if (!post.likedByMe) {
+                        repository.likeById(post.id)
+                    } else {
+                        repository.dislikeById(post.id)
+                    }
+                } catch (e: Exception) {
+                    _dataState.value = FeedModelState(error = true)
+                }
+            }
+        } ?: let {
+            _showOfferAuth.value = Unit
         }
     }
 
@@ -175,5 +200,22 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
         }
+    }
+
+    fun onFabClicked() {
+        AppAuth.getInstance().authStateFlow.value?.let {
+            _showFragmentPostCreate.value = Unit
+        } ?: let {
+            _showOfferAuth.value = Unit
+        }
+    }
+
+    fun logoutFromNewPostFragment() {
+        AppAuth.getInstance().removeAuth()
+        _backToFeedFragmentFromDialogConfirmation.value = Unit
+    }
+
+    fun toDialogConfirmation() {
+        _toDialogConfirmationFromNewPostFragment.value = Unit
     }
 }
