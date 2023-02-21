@@ -115,19 +115,14 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _media.value = null
     }
 
-    fun clickOnButtonNewPosts() {
-        AppAuth.getInstance().authStateFlow.value?.let {
-            viewModelScope.launch {
-                try {
-                    repository.readAll()
-                } catch (e: Exception) {
-                    _dataState.value = FeedModelState(error = true)
-                }
-            }
-        } ?: let {
-            _showOfferAuth.value = Unit
+    fun clickOnButtonNewPosts() = viewModelScope.launch {
+        try {
+            repository.readAll()
+        } catch (e: Exception) {
+            _dataState.value = FeedModelState(error = true)
         }
     }
+
 
     fun loadPosts() = viewModelScope.launch {
         try {
