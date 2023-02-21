@@ -139,6 +139,12 @@ class FeedFragment : Fragment() {
             findNavController().navigateUp()
         }
 
+        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner){
+            findNavController().navigate(
+                R.id.action_feedFragment_to_confirmationLogOutDialog
+            )
+        }
+
         return binding.root
     }
 

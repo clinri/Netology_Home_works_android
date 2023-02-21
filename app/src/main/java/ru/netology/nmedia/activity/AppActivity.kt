@@ -23,12 +23,12 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
+    val postViewModel by viewModels<PostViewModel>()
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var toolbar: Toolbar
     private var previousMenuProvider: MenuProvider? = null
@@ -103,15 +103,19 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                             true
                         }
                         R.id.logout -> {
-                            navController.addOnDestinationChangedListener { _, distanation, _ ->
-                                when (distanation.id) {
-                                    R.id.newPostFragment -> {
-                                        val postViewModel by viewModels<PostViewModel>()
-                                        postViewModel.toDialogConfirmation()
+                            val listener =
+                                NavController.OnDestinationChangedListener { _, destination, _ ->
+                                    when (destination.id) {
+                                        R.id.newPostFragment -> {
+                                            postViewModel.toDialogConfirmationFromNewPostFragment()
+                                        }
+                                        R.id.feedFragment -> {
+                                            postViewModel.toDialogConfirmationFromFeedFragment()
+                                        }
                                     }
-                                    else -> {AppAuth.getInstance().removeAuth()}
                                 }
-                            }
+                            navController.addOnDestinationChangedListener(listener)
+                            navController.removeOnDestinationChangedListener(listener)
                             true
                         }
                         else -> false

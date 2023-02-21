@@ -82,6 +82,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val toDialogConfirmationFromNewPostFragment: LiveData<Unit>
         get() = _toDialogConfirmationFromNewPostFragment
 
+    private val _toDialogConfirmationFromFeedFragment = SingleLiveEvent<Unit>()
+    val toDialogConfirmationFromFeedFragment: LiveData<Unit>
+        get() = _toDialogConfirmationFromFeedFragment
+
     init {
         loadPosts()
         viewModelScope.launch {
@@ -215,7 +219,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _backToFeedFragmentFromDialogConfirmation.value = Unit
     }
 
-    fun toDialogConfirmation() {
+    fun toDialogConfirmationFromNewPostFragment() {
         _toDialogConfirmationFromNewPostFragment.value = Unit
+    }
+
+    fun toDialogConfirmationFromFeedFragment() {
+        _toDialogConfirmationFromFeedFragment.value = Unit
     }
 }
