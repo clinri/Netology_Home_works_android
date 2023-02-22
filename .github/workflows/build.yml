@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, Home_work_#13_auth_Task_#1_Authentication ]
+    branches: [ master, Home_work_#13_auth_Task_#2_Sign_In_to_Are_you_sure ]
 
 jobs:
   build:

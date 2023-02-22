@@ -36,4 +36,10 @@
     <string name="enter_login" translatable="false">enter login</string>
     <string name="password" translatable="false">Password</string>
     <string name="enter_password" translatable="false">enter password</string>
+    <string name="confirmation_password" translatable="false">Confirmation\npassword</string>
+    <string name="enter_confirmation_password" translatable="false">confirm password</string>
+    <string name="registration" translatable="false">Registration</string>
+    <string name="name" translatable="false">Name</string>
+    <string name="enter_your_name" translatable="false">enter your name</string>
+    <string name="add_avatar" translatable="false">Add avatar</string>
 </resources>
