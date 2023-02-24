@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
 
 class AppAuth private constructor(context: Context) {
@@ -21,6 +25,7 @@ class AppAuth private constructor(context: Context) {
         } else {
             _authStateFlow = MutableStateFlow(AuthModel(id, token))
         }
+        sendPushToken()
     }
 
     val authStateFlow = _authStateFlow.asStateFlow()
@@ -31,6 +36,7 @@ class AppAuth private constructor(context: Context) {
         prefs.edit {
             putLong(ID_KEY, id)
             putString(TOKEN_KEY, token)
+            sendPushToken()
         }
     }
 
@@ -39,6 +45,18 @@ class AppAuth private constructor(context: Context) {
         _authStateFlow.value = null
         prefs.edit {
             clear()
+        }
+        sendPushToken()
+    }
+
+    fun sendPushToken(tokenFirebase: String? = null) {
+        CoroutineScope(Dispatchers.Default).launch {
+            val tokenFireBaseNotNull = tokenFirebase ?: FirebaseMessaging.getInstance().token.await()
+            try {
+                PostsApi.service.sendPushToken(PushToken(tokenFireBaseNotNull))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
