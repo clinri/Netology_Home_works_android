@@ -51,14 +51,14 @@ class RegistrationFragment : Fragment() {
             val login = binding.login.text.toString()
             val pass = binding.password.text.toString()
             val name = binding.name.text.toString()
-            viewModel.registrationByLoginAndPasswordAndName(login, pass, name)
+            viewModel.registration(login, pass, name)
             AndroidUtils.hideKeyboard(requireView())
         }
 
         viewModel.errorRegistration.observe(viewLifecycleOwner) {
             Snackbar.make(
                 binding.root,
-                "Error authentication",
+                "Error registration",
                 Snackbar.LENGTH_LONG
             )
                 .show()
@@ -70,7 +70,7 @@ class RegistrationFragment : Fragment() {
             }
         }
 
-        viewModel.media.observe(viewLifecycleOwner) { mediaModel ->
+        viewModel.photo.observe(viewLifecycleOwner) { mediaModel ->
             if (mediaModel?.uri == null) {
                 binding.previewContainer.isVisible = false
                 binding.addPhoto.isVisible = true

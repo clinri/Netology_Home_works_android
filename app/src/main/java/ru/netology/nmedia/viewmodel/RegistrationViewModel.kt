@@ -32,26 +32,26 @@ class RegistrationViewModel : ViewModel() {
     val errorRegistration: LiveData<Unit>
         get() = _errorRegistration
 
-    private val _media = MutableLiveData<MediaModel?>(null)
-    val media: LiveData<MediaModel?>
-        get() = _media
+    private val _photo = MutableLiveData<MediaModel?>(null)
+    val photo: LiveData<MediaModel?>
+        get() = _photo
 
     fun changePhoto(uri: Uri, file: File) {
-        _media.value = MediaModel(uri, file)
+        _photo.value = MediaModel(uri, file)
     }
 
     fun clearPhoto() {
-        _media.value = null
+        _photo.value = null
     }
 
-    fun registrationByLoginAndPasswordAndName(login: String, password: String, name: String) {
-        when (val mediaModel = _media.value) {
-            null -> registerWithoutAvatar(login, password, name)
-            else -> registerWithAvatar(login, password, name, mediaModel)
+    fun registration(login: String, password: String, name: String) {
+        when (val photoMediaModel = _photo.value) {
+            null -> register(login, password, name)
+            else -> registerWithPhoto(login, password, name, photoMediaModel)
         }
     }
 
-    private fun registerWithoutAvatar(
+    private fun register(
         login: String,
         password: String,
         name: String,
@@ -77,19 +77,19 @@ class RegistrationViewModel : ViewModel() {
         }
     }
 
-    private fun registerWithAvatar(
+    private fun registerWithPhoto(
         login: String,
         password: String,
         name: String,
-        avatar: MediaModel
+        photo: MediaModel
     ) {
         var result: AuthModel? = null
         viewModelScope.launch {
             try {
                 val photoPart = MultipartBody.Part.createFormData(
                     name = "file",
-                    filename = avatar.file.name,
-                    body = avatar.file.asRequestBody()
+                    filename = photo.file.name,
+                    body = photo.file.asRequestBody()
                 )
                 val loginPart = login.toRequestBody("text/plain".toMediaType())
                 val passwordPart = password.toRequestBody("text/plain".toMediaType())
@@ -107,7 +107,7 @@ class RegistrationViewModel : ViewModel() {
                     _errorRegistration.value = Unit
                     result
                 }
-                result?.let { AppAuth.getInstance().setAuthWithAvatar(it.id, it.token, it.photo!!) }
+                result?.let { AppAuth.getInstance().setAuth(it.id, it.token) }
                 _tryRegistration.value = Unit
             } catch (e: IOException) {
                 _errorRegistration.value = Unit

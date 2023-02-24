@@ -14,13 +14,12 @@ class AppAuth private constructor(context: Context) {
     init {
         val token = prefs.getString(TOKEN_KEY, null)
         val id = prefs.getLong(ID_KEY, 0)
-        val avatar = prefs.getString(AVATAR_KEY, null)
 
         if (token == null || id == 0L) {
             _authStateFlow = MutableStateFlow(null)
             prefs.edit { clear() }
         } else {
-            _authStateFlow = MutableStateFlow(AuthModel(id, token, avatar))
+            _authStateFlow = MutableStateFlow(AuthModel(id, token))
         }
     }
 
@@ -32,16 +31,6 @@ class AppAuth private constructor(context: Context) {
         prefs.edit {
             putLong(ID_KEY, id)
             putString(TOKEN_KEY, token)
-        }
-    }
-
-    @Synchronized
-    fun setAuthWithAvatar(id: Long, token: String, avatar: String) {
-        _authStateFlow.value = AuthModel(id, token)
-        prefs.edit {
-            putLong(ID_KEY, id)
-            putString(TOKEN_KEY, token)
-            putString(AVATAR_KEY, avatar)
         }
     }
 
@@ -58,7 +47,6 @@ class AppAuth private constructor(context: Context) {
         private var INSTANCE: AppAuth? = null
         private const val TOKEN_KEY = "TOKEN_KEY"
         private const val ID_KEY = "ID_KEY"
-        private const val AVATAR_KEY = "AVATAR_KEY"
 
         fun getInstance(): AppAuth = synchronized(this) {
             requireNotNull(INSTANCE) {
