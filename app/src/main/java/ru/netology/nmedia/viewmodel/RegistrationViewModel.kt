@@ -1,13 +1,16 @@
 package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.api.RetrofitApi
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.model.AuthModel
@@ -59,7 +62,7 @@ class RegistrationViewModel : ViewModel() {
         var result: AuthModel? = null
         viewModelScope.launch {
             try {
-                val response = PostsApi.service.registrationUser(login, password, name)
+                val response = RetrofitApi.service.registrationUser(login, password, name)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
@@ -94,7 +97,7 @@ class RegistrationViewModel : ViewModel() {
                 val loginPart = login.toRequestBody("text/plain".toMediaType())
                 val passwordPart = password.toRequestBody("text/plain".toMediaType())
                 val namePart = name.toRequestBody("text/plain".toMediaType())
-                val response = PostsApi.service.registerWithPhoto(
+                val response = RetrofitApi.service.registerWithPhoto(
                     login =  loginPart,
                     pass = passwordPart,
                     name = namePart,
