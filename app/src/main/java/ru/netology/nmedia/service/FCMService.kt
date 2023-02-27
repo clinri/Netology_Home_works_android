@@ -47,23 +47,25 @@ class FCMService : FirebaseMessagingService() {
         println("contentInPushMessage = $contentInPushMessage")
         val currentId = AppAuth.getInstance().authStateFlow.value?.id
 
-        //если recipientId = null, то это массовая рассылка, показываете Notification.
-        if (recipientIdInPushMessage == null) {
-            handleNotificationForAll(contentInPushMessage)
-
+        when {
+            //если recipientId = null, то это массовая рассылка, показываете Notification.
+            recipientIdInPushMessage == null -> {
+                handleNotificationForAll(contentInPushMessage)
+            }
             // если recipientId = 0 (и не равен вашему), сервер считает, что у вас анонимная
             // аутентификация и вам нужно переотправить свой push token
-        } else if (recipientIdInPushMessage == 0L && recipientIdInPushMessage != currentId) {
-            AppAuth.getInstance().sendPushToken()
-
+            recipientIdInPushMessage == 0L && recipientIdInPushMessage != currentId -> {
+                AppAuth.getInstance().sendPushToken()
+            }
             // если recipientId != 0 (и не равен вашему), значит сервер считает, что на вашем
             // устройстве другая аутентификация и вам нужно переотправить свой push token;
-        } else if (recipientIdInPushMessage != 0L && recipientIdInPushMessage != currentId) {
-            AppAuth.getInstance().sendPushToken()
-
+            recipientIdInPushMessage != 0L && recipientIdInPushMessage != currentId -> {
+                AppAuth.getInstance().sendPushToken()
+            }
             // если recipientId = тому, что в AppAuth, то всё ok, показываете Notification
-        } else if (recipientIdInPushMessage == currentId) {
-            handleNotificationForRecipient(currentId, contentInPushMessage)
+            recipientIdInPushMessage == currentId -> {
+                handleNotificationForRecipient(currentId, contentInPushMessage)
+            }
         }
     }
 
