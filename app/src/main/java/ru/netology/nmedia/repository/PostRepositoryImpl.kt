@@ -22,7 +22,10 @@ import ru.netology.nmedia.error.*
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
 
-class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
+class PostRepositoryImpl(
+    private val dao: PostDao,
+    private val apiService: ApiService
+    ) : PostRepository {
     override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
         .flowOn(Dispatchers.Default)
 
@@ -30,7 +33,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun getAll() {
         try {
-            val response = RetrofitApi.service.getAll()
+            val response = apiService.getAll()
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -59,7 +62,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         while (true) {
             delay(10_000L)
             try {
-                val response = RetrofitApi.service.getNewer(latestId)
+                val response = apiService.getNewer(latestId)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
@@ -80,7 +83,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun save(post: Post) {
         try {
-            val response = RetrofitApi.service.save(post)
+            val response = apiService.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -116,7 +119,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала удаляем запись в локальной БД.
             dao.removeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.removeById(id)
+            val response = apiService.removeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -132,7 +135,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала модифицируем запись в локальной БД.
             dao.likeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.likeById(id)
+            val response = apiService.likeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -148,7 +151,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала модифицируем запись в локальной БД.
             dao.likeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.dislikeById(id)
+            val response = apiService.dislikeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -173,7 +176,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             filename = media.file.name,
             body = media.file.asRequestBody()
         )
-        val response = RetrofitApi.service.uploadMedia(part)
+        val response = apiService.uploadMedia(part)
         if (!response.isSuccessful) {
             throw ApiError(response.code(), response.message())
         }
