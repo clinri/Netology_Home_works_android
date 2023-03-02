@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuProvider
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -22,13 +23,16 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.PostViewModel
 
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
+    val postViewModel by viewModels<PostViewModel>()
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var toolbar: Toolbar
+    private var previousMenuProvider: MenuProvider? = null
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +61,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupWithNavController(toolbar, navController, appBarConfiguration)
 
@@ -68,9 +72,18 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             }
         }
 
-        val authViewModel by viewModels<AuthViewModel>()
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.feedFragment, R.id.newPostFragment -> addMenuInMenuProvider()
+                else -> previousMenuProvider?.let(toolbar::removeMenuProvider)
+            }
+        }
 
-        var previousMenuProvider: MenuProvider? = null
+        checkGoogleApiAvailability()
+    }
+
+    private fun addMenuInMenuProvider() {
+        val authViewModel by viewModels<AuthViewModel>()
         authViewModel.data.observe(this) {
             previousMenuProvider?.let(toolbar::removeMenuProvider)
             toolbar.addMenuProvider(object : MenuProvider {
@@ -83,21 +96,38 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
                     when (menuItem.itemId) {
-                        R.id.login, R.id.register -> {
-                            // TODO Remove in home work
-                            AppAuth.getInstance().setAuth(5, "x-token")
+                        R.id.login -> {
+                            findNavController(R.id.nav_host_fragment).navigate(
+                                R.id.action_feedFragment_to_authFragment
+                            )
+                            true
+                        }
+                        R.id.register -> {
+                            findNavController(R.id.nav_host_fragment).navigate(
+                                R.id.action_feedFragment_to_registrationFragment
+                            )
                             true
                         }
                         R.id.logout -> {
-                            AppAuth.getInstance().removeAuth()
+                            val listener =
+                                NavController.OnDestinationChangedListener { _, destination, _ ->
+                                    when (destination.id) {
+                                        R.id.newPostFragment -> {
+                                            postViewModel.toDialogConfirmationFromNewPostFragment()
+                                        }
+                                        R.id.feedFragment -> {
+                                            postViewModel.toDialogConfirmationFromFeedFragment()
+                                        }
+                                    }
+                                }
+                            navController.addOnDestinationChangedListener(listener)
+                            navController.removeOnDestinationChangedListener(listener)
                             true
                         }
                         else -> false
                     }
             }.also { previousMenuProvider = it })
         }
-
-        checkGoogleApiAvailability()
     }
 
     private fun setToolbarLight() {
@@ -136,8 +166,8 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment)
-        return navController.navigateUp(appBarConfiguration)
+        val navControllerNavigateUp = findNavController(R.id.nav_host_fragment)
+        return navControllerNavigateUp.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
     }
 }

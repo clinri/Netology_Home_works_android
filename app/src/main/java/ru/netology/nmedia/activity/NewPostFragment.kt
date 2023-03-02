@@ -117,6 +117,12 @@ class NewPostFragment : Fragment() {
             binding.preview.setImageURI(mediaModel.uri)
         }
 
+        viewModel.toDialogConfirmationFromNewPostFragment.observe(viewLifecycleOwner){
+            findNavController().navigate(
+                R.id.action_newPostFragment_to_confirmationLogOutDialog
+            )
+        }
+
         return binding.root
     }
 }
