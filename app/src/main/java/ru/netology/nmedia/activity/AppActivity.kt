@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -23,12 +24,33 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
-    val postViewModel by viewModels<PostViewModel>()
+    private val dependencyContainer = DependencyContainer.getInstance()
+
+    val postViewModel by viewModels<PostViewModel>(
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.repository,
+                dependencyContainer.appAuth,
+                dependencyContainer.apiService
+            )
+        }
+    )
+    val authViewModel: AuthViewModel by viewModels(
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.repository,
+                dependencyContainer.appAuth,
+                dependencyContainer.apiService
+            )
+        }
+    )
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var toolbar: Toolbar
     private var previousMenuProvider: MenuProvider? = null
@@ -83,7 +105,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     }
 
     private fun addMenuInMenuProvider() {
-        val authViewModel by viewModels<AuthViewModel>()
         authViewModel.data.observe(this) {
             previousMenuProvider?.let(toolbar::removeMenuProvider)
             toolbar.addMenuProvider(object : MenuProvider {

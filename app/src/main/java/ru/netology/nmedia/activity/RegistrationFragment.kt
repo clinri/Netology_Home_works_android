@@ -14,12 +14,25 @@ import androidx.navigation.fragment.findNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.databinding.FragmentRegistrationBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.viewmodel.RegistrationViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class RegistrationFragment : Fragment() {
 
-    private val viewModel by viewModels<RegistrationViewModel>()
+    private val dependencyContainer = DependencyContainer.getInstance()
+
+    private val viewModel: RegistrationViewModel by viewModels(
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.repository,
+                dependencyContainer.appAuth,
+                dependencyContainer.apiService
+            )
+        }
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

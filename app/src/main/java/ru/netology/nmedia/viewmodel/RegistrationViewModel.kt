@@ -10,7 +10,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import ru.netology.nmedia.api.RetrofitApi
+import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.model.AuthModel
@@ -19,11 +19,14 @@ import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 import java.io.IOException
 
-class RegistrationViewModel : ViewModel() {
+class RegistrationViewModel(
+    private val appAuth: AppAuth,
+    private val api: ApiService,
+) : ViewModel() {
 
     val authorized: Boolean
         get() {
-            val id = AppAuth.getInstance().authStateFlow.value?.id ?: 0L
+            val id = appAuth.authStateFlow.value?.id ?: 0L
             return id != 0L
         }
 
@@ -62,7 +65,7 @@ class RegistrationViewModel : ViewModel() {
         var result: AuthModel? = null
         viewModelScope.launch {
             try {
-                val response = RetrofitApi.service.registrationUser(login, password, name)
+                val response = api.registrationUser(login, password, name)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
@@ -70,7 +73,7 @@ class RegistrationViewModel : ViewModel() {
                     _errorRegistration.value = Unit
                     result
                 }
-                result?.let { AppAuth.getInstance().setAuth(it.id, it.token) }
+                result?.let { appAuth.setAuth(it.id, it.token) }
                 _tryRegistration.value = Unit
             } catch (e: IOException) {
                 _errorRegistration.value = Unit
@@ -97,7 +100,7 @@ class RegistrationViewModel : ViewModel() {
                 val loginPart = login.toRequestBody("text/plain".toMediaType())
                 val passwordPart = password.toRequestBody("text/plain".toMediaType())
                 val namePart = name.toRequestBody("text/plain".toMediaType())
-                val response = RetrofitApi.service.registerWithPhoto(
+                val response = api.registerWithPhoto(
                     login =  loginPart,
                     pass = passwordPart,
                     name = namePart,
@@ -110,7 +113,7 @@ class RegistrationViewModel : ViewModel() {
                     _errorRegistration.value = Unit
                     result
                 }
-                result?.let { AppAuth.getInstance().setAuth(it.id, it.token) }
+                result?.let { appAuth.setAuth(it.id, it.token) }
                 _tryRegistration.value = Unit
             } catch (e: IOException) {
                 _errorRegistration.value = Unit

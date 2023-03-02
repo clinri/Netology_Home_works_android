@@ -9,6 +9,7 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -16,9 +17,11 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.util.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class FeedFragment : Fragment() {
 
@@ -26,7 +29,18 @@ class FeedFragment : Fragment() {
         var Bundle.textArg: String? by StringArg
     }
 
-    private val viewModel: PostViewModel by activityViewModels()
+    private val dependencyContainer = DependencyContainer.getInstance()
+
+    private val viewModel: PostViewModel by viewModels(
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.repository,
+                dependencyContainer.appAuth,
+                dependencyContainer.apiService
+            )
+        }
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,7 +112,7 @@ class FeedFragment : Fragment() {
                 .show()
         }
 
-        viewModel.showOfferAuth.observe(viewLifecycleOwner){
+        viewModel.showOfferAuth.observe(viewLifecycleOwner) {
             findNavController().navigate(
                 R.id.action_feedFragment_to_offerAuthDialog
             )
@@ -130,16 +144,17 @@ class FeedFragment : Fragment() {
             viewModel.onFabClicked()
         }
 
-        viewModel.showFragmentPostCreate.observe(viewLifecycleOwner){
+        viewModel.showFragmentPostCreate.observe(viewLifecycleOwner) {
             findNavController().navigate(
-                R.id.action_feedFragment_to_newPostFragment)
+                R.id.action_feedFragment_to_newPostFragment
+            )
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) {
             findNavController().navigateUp()
         }
 
-        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner){
+        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner) {
             findNavController().navigate(
                 R.id.action_feedFragment_to_confirmationLogOutDialog
             )

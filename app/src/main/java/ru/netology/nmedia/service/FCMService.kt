@@ -13,7 +13,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import ru.netology.nmedia.R
-import ru.netology.nmedia.auth.AppAuth
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.dto.PushMessage
 import kotlin.random.Random
 
@@ -23,6 +23,7 @@ class FCMService : FirebaseMessagingService() {
     private val recipientId = "recipientId"
     private val channelId = "remote"
     private val gson = Gson()
+    private val appAuth = DependencyContainer.getInstance().appAuth
 
     override fun onCreate() {
         super.onCreate()
@@ -41,11 +42,12 @@ class FCMService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         println(gson.toJson(message))
         val pushMessage = message.data[content]
-        val recipientIdInPushMessage = gson.fromJson(pushMessage, PushMessage::class.java).recipientId
+        val recipientIdInPushMessage =
+            gson.fromJson(pushMessage, PushMessage::class.java).recipientId
         val contentInPushMessage = gson.fromJson(pushMessage, PushMessage::class.java).content
         println("idInPushMessage = $recipientIdInPushMessage")
         println("contentInPushMessage = $contentInPushMessage")
-        val currentId = AppAuth.getInstance().authStateFlow.value?.id
+        val currentId = appAuth.authStateFlow.value?.id
 
         when {
             //если recipientId = null, то это массовая рассылка, показываете Notification.
@@ -55,12 +57,12 @@ class FCMService : FirebaseMessagingService() {
             // если recipientId = 0 (и не равен вашему), сервер считает, что у вас анонимная
             // аутентификация и вам нужно переотправить свой push token
             recipientIdInPushMessage == 0L && recipientIdInPushMessage != currentId -> {
-                AppAuth.getInstance().sendPushToken()
+                appAuth.sendPushToken()
             }
             // если recipientId != 0 (и не равен вашему), значит сервер считает, что на вашем
             // устройстве другая аутентификация и вам нужно переотправить свой push token;
             recipientIdInPushMessage != 0L && recipientIdInPushMessage != currentId -> {
-                AppAuth.getInstance().sendPushToken()
+                appAuth.sendPushToken()
             }
             // если recipientId = тому, что в AppAuth, то всё ok, показываете Notification
             recipientIdInPushMessage == currentId -> {
@@ -111,6 +113,6 @@ class FCMService : FirebaseMessagingService() {
 
     override fun onNewToken(tokenFirebase: String) {
         println("tokenFirebase: $tokenFirebase")
-        AppAuth.getInstance().sendPushToken(tokenFirebase)
+        appAuth.sendPushToken(tokenFirebase)
     }
 }

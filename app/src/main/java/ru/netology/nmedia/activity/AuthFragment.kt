@@ -9,12 +9,25 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.databinding.FragmentAuthBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class AuthFragment : Fragment() {
 
-    private val viewModel by viewModels<AuthViewModel>()
+    private val dependencyContainer = DependencyContainer.getInstance()
+
+    private val viewModel: AuthViewModel by viewModels(
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.repository,
+                dependencyContainer.appAuth,
+                dependencyContainer.apiService
+            )
+        }
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,7 +47,7 @@ class AuthFragment : Fragment() {
             AndroidUtils.hideKeyboard(requireView())
         }
 
-        viewModel.errorAuth.observe(viewLifecycleOwner){
+        viewModel.errorAuth.observe(viewLifecycleOwner) {
             Snackbar.make(
                 binding.root,
                 "Error authentication",

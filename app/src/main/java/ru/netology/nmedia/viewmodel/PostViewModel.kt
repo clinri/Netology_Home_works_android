@@ -1,6 +1,5 @@
 package ru.netology.nmedia.viewmodel
 
-import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.*
 import arrow.core.Either
@@ -11,13 +10,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
-import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.PostRepository
-import ru.netology.nmedia.repository.PostRepositoryImpl
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 
@@ -32,13 +29,13 @@ private val empty = Post(
     published = ""
 )
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
-    // упрощённый вариант
-    private val repository: PostRepository =
-        PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
+class PostViewModel(
+    private val repository: PostRepository,
+    private val appAuth: AppAuth
+) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> = AppAuth.getInstance().authStateFlow.flatMapLatest { authState ->
+    val data: LiveData<FeedModel> = appAuth.authStateFlow.flatMapLatest { authState ->
         repository.data
             .map { posts ->
                 FeedModel(posts.map {
@@ -176,7 +173,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun like(post: Post) {
-        AppAuth.getInstance().authStateFlow.value?.let {
+        appAuth.authStateFlow.value?.let {
             viewModelScope.launch {
                 try {
                     if (!post.likedByMe) {
@@ -202,7 +199,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onFabClicked() {
-        AppAuth.getInstance().authStateFlow.value?.let {
+        appAuth.authStateFlow.value?.let {
             _showFragmentPostCreate.value = Unit
         } ?: let {
             _showOfferAuth.value = Unit
@@ -210,7 +207,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun logoutFromNewPostFragment() {
-        AppAuth.getInstance().removeAuth()
+        appAuth.removeAuth()
         _backToFeedFragmentFromDialogConfirmation.value = Unit
     }
 
