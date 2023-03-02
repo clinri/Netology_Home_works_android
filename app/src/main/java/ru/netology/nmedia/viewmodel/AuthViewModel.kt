@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.api.ApiService
@@ -12,8 +13,10 @@ import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.model.AuthModel
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.IOException
+import javax.inject.Inject
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val appAuth: AppAuth,
     private val api: ApiService,
 ) : ViewModel() {

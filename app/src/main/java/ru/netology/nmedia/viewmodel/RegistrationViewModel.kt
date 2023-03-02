@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -18,8 +19,10 @@ import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 import java.io.IOException
+import javax.inject.Inject
 
-class RegistrationViewModel(
+@HiltViewModel
+class RegistrationViewModel @Inject constructor(
     private val appAuth: AppAuth,
     private val api: ApiService,
 ) : ViewModel() {

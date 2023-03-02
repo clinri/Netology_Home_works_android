@@ -21,8 +21,9 @@ import ru.netology.nmedia.entity.toEntity
 import ru.netology.nmedia.error.*
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
+import javax.inject.Inject
 
-class PostRepositoryImpl(
+class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
     private val apiService: ApiService
     ) : PostRepository {
