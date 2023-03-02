@@ -2,11 +2,14 @@ package ru.netology.nmedia.auth
 
 import android.content.Context
 import androidx.core.content.edit
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.api.RetrofitApi
 import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
 
@@ -51,9 +54,10 @@ class AppAuth private constructor(context: Context) {
 
     fun sendPushToken(tokenFirebase: String? = null) {
         CoroutineScope(Dispatchers.Default).launch {
-            val tokenFireBaseNotNull = tokenFirebase ?: FirebaseMessaging.getInstance().token.await()
+            val tokenFireBaseNotNull =
+                tokenFirebase ?: FirebaseMessaging.getInstance().token.await()
             try {
-                PostsApi.service.sendPushToken(PushToken(tokenFireBaseNotNull))
+                RetrofitApi.service.sendPushToken(PushToken(tokenFireBaseNotNull))
             } catch (e: Exception) {
                 e.printStackTrace()
             }

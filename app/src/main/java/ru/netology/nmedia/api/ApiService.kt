@@ -95,7 +95,7 @@ interface ApiService {
     suspend fun sendPushToken(@Body token: PushToken): Response<Unit>
 }
 
-object PostsApi {
+object RetrofitApi {
     val service: ApiService by lazy {
         retrofit.create(ApiService::class.java)
     }

@@ -42,4 +42,6 @@
     <string name="name" translatable="false">Name</string>
     <string name="enter_your_name" translatable="false">enter your name</string>
     <string name="add_avatar" translatable="false">Add avatar</string>
+    <string name="notification_for_recipient_login_user" translatable="false">Notification for user %d</string>
+    <string name="notification_for_all" translatable="false">Notification for all</string>
 </resources>
