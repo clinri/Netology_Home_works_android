@@ -41,10 +41,7 @@ class FeedFragment : Fragment() {
             }
 
             override fun onLike(post: Post) {
-                if (!post.likedByMe)
-                    viewModel.likeById(post.id)
-                else
-                    viewModel.dislikeById(post.id)
+                viewModel.like(post)
             }
 
             override fun onRemove(post: Post) {
@@ -101,6 +98,12 @@ class FeedFragment : Fragment() {
                 .show()
         }
 
+        viewModel.showOfferAuth.observe(viewLifecycleOwner){
+            findNavController().navigate(
+                R.id.action_feedFragment_to_offerAuthDialog
+            )
+        }
+
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 if (positionStart == 0) {
@@ -124,12 +127,22 @@ class FeedFragment : Fragment() {
         }
 
         binding.fab.setOnClickListener {
+            viewModel.onFabClicked()
+        }
+
+        viewModel.showFragmentPostCreate.observe(viewLifecycleOwner){
             findNavController().navigate(
                 R.id.action_feedFragment_to_newPostFragment)
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) {
             findNavController().navigateUp()
+        }
+
+        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner){
+            findNavController().navigate(
+                R.id.action_feedFragment_to_confirmationLogOutDialog
+            )
         }
 
         return binding.root

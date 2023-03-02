@@ -19,8 +19,8 @@
             android:text="@string/login"
             android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@id/tv_pass"
-            app:layout_constraintEnd_toEndOf="@id/tv_pass" />
+            app:layout_constraintBottom_toTopOf="@id/tv_password"
+            app:layout_constraintEnd_toEndOf="@id/tv_password" />
 
         <EditText
             android:id="@+id/login"
@@ -30,13 +30,13 @@
             android:hint="@string/enter_login"
             app:layout_constraintBottom_toBottomOf="@id/tv_login"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_pass"
+            app:layout_constraintStart_toEndOf="@id/tv_password"
             app:layout_constraintTop_toTopOf="@id/tv_login"
             android:autofillHints=""
             android:inputType="text" />
 
         <TextView
-            android:id="@+id/tv_pass"
+            android:id="@+id/tv_password"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/common_spacing"
@@ -54,10 +54,10 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/common_spacing"
             android:hint="@string/enter_password"
-            app:layout_constraintBottom_toBottomOf="@id/tv_pass"
+            app:layout_constraintBottom_toBottomOf="@id/tv_password"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_pass"
-            app:layout_constraintTop_toTopOf="@id/tv_pass"
+            app:layout_constraintStart_toEndOf="@id/tv_password"
+            app:layout_constraintTop_toTopOf="@id/tv_password"
             android:autofillHints=""
             android:inputType="textPassword" />
 
@@ -70,7 +70,7 @@
             android:text="@string/login"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_pass" />
+            app:layout_constraintTop_toBottomOf="@id/tv_password" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>
