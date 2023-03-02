@@ -6,7 +6,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.api.RetrofitApi
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.model.AuthModel
@@ -36,7 +36,7 @@ class AuthViewModel : ViewModel() {
         var result: AuthModel? = null
         viewModelScope.launch {
             try {
-                val response = PostsApi.service.updateUser(login, password)
+                val response = RetrofitApi.service.updateUser(login, password)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
