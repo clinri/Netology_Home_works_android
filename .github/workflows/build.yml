@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, Home_work_#14_pushes_before_Task_#1_RecipientId ]
+    branches: [ master, Home_work_#01_di_Task_#1_Dagger_Hilt ]
 
 jobs:
   build:
