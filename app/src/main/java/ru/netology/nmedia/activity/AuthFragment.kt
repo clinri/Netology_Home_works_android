@@ -12,6 +12,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.databinding.FragmentAuthBinding
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.PostViewModel
 
 @AndroidEntryPoint
 class AuthFragment : Fragment() {
@@ -47,6 +48,8 @@ class AuthFragment : Fragment() {
 
         viewModel.tryAuth.observe(viewLifecycleOwner) {
             if (viewModel.authorized) {
+                val postViewModel : PostViewModel by activityViewModels()
+                postViewModel.loadPosts()
                 findNavController().navigateUp()
             }
         }

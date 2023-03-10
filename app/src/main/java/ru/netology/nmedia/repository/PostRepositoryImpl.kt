@@ -71,7 +71,7 @@ class PostRepositoryImpl @Inject constructor(
 
     override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
         while (true) {
-            delay(10_000L)
+            delay(120_000L)
             try {
                 val response = apiService.getNewer(latestId)
                 if (!response.isSuccessful) {
