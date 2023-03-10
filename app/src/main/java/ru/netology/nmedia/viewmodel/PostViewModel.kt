@@ -2,17 +2,15 @@ package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.*
-import arrow.core.Either
+import androidx.paging.PagingData
+import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.PostRepository
@@ -34,18 +32,17 @@ private val empty = Post(
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val repository: PostRepository,
-    private val appAuth: AppAuth
+    private val appAuth: AppAuth,
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> = appAuth.authStateFlow.flatMapLatest { authState ->
-        repository.data
-            .map { posts ->
-                FeedModel(posts.map {
-                    it.copy(ownedByMe = authState?.id == it.authorId)
-                }, posts.isEmpty())
-            }
-    }.asLiveData(Dispatchers.Default)
+    val data: Flow<PagingData<Post>> = appAuth.authStateFlow
+        .flatMapLatest { (myId, _) ->
+            repository.data
+                .map { posts ->
+                    posts.map { it.copy(ownedByMe = it.authorId == myId) }
+                }
+        }.flowOn(Dispatchers.Default)
 
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
@@ -88,23 +85,23 @@ class PostViewModel @Inject constructor(
 
     init {
         loadPosts()
-        viewModelScope.launch {
-            @OptIn(ExperimentalCoroutinesApi::class)
-            repository.data.flatMapLatest { posts ->
-                val latestPostId = posts.firstOrNull()?.id ?: 0L
-                repository.requestNewer(latestPostId).mapNotNull { either ->
-                    when (either) {
-                        is Either.Left -> {
-                            either.value
-                        }
-                        is Either.Right -> null
-                    }
-                }
-            }.collect {
-                // уведомление об ошибке при загрузке новых постов
-                _errorGetNewer.value = Unit
-            }
-        }
+//        viewModelScope.launch {
+//            @OptIn(ExperimentalCoroutinesApi::class)
+//            repository.data.flatMapLatest { posts ->
+//                val latestPostId = posts.firstOrNull()?.id ?: 0L
+//                repository.requestNewer(latestPostId).mapNotNull { either ->
+//                    when (either) {
+//                        is Either.Left -> {
+//                            either.value
+//                        }
+//                        is Either.Right -> null
+//                    }
+//                }
+//            }.collect {
+//                // уведомление об ошибке при загрузке новых постов
+//                _errorGetNewer.value = Unit
+//            }
+//        }
     }
 
     fun changePhoto(uri: Uri, file: File) {
@@ -134,6 +131,7 @@ class PostViewModel @Inject constructor(
         }
     }
 
+/*
     fun refreshPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(refreshing = true)
@@ -143,6 +141,7 @@ class PostViewModel @Inject constructor(
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
     fun save() {
         edited.value?.let { post ->
@@ -176,20 +175,23 @@ class PostViewModel @Inject constructor(
     }
 
     fun like(post: Post) {
-        appAuth.authStateFlow.value?.let {
-            viewModelScope.launch {
-                try {
-                    if (!post.likedByMe) {
-                        repository.likeById(post.id)
-                    } else {
-                        repository.dislikeById(post.id)
+        appAuth.authStateFlow.value.let {
+            val notAuth = it.token == null || it.id == 0L
+            if (!notAuth) {
+                viewModelScope.launch {
+                    try {
+                        if (!post.likedByMe) {
+                            repository.likeById(post.id)
+                        } else {
+                            repository.dislikeById(post.id)
+                        }
+                    } catch (e: Exception) {
+                        _dataState.value = FeedModelState(error = true)
                     }
-                } catch (e: Exception) {
-                    _dataState.value = FeedModelState(error = true)
                 }
+            } else {
+                _showOfferAuth.value = Unit
             }
-        } ?: let {
-            _showOfferAuth.value = Unit
         }
     }
 
@@ -202,9 +204,9 @@ class PostViewModel @Inject constructor(
     }
 
     fun onFabClicked() {
-        appAuth.authStateFlow.value?.let {
+        if (appAuth.authStateFlow.value.id != 0L) {
             _showFragmentPostCreate.value = Unit
-        } ?: let {
+        } else {
             _showOfferAuth.value = Unit
         }
     }

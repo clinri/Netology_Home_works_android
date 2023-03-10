@@ -1,24 +1,29 @@
 package ru.netology.nmedia.repository
 
-import androidx.lifecycle.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import arrow.core.Either
 import arrow.core.left
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import ru.netology.nmedia.api.*
+import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
-import ru.netology.nmedia.entity.toDto
 import ru.netology.nmedia.entity.toEntity
-import ru.netology.nmedia.error.*
+import ru.netology.nmedia.error.ApiError
+import ru.netology.nmedia.error.AppError
+import ru.netology.nmedia.error.NetworkError
+import ru.netology.nmedia.error.UnknownError
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
 import javax.inject.Inject
@@ -27,8 +32,12 @@ class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
     private val apiService: ApiService
     ) : PostRepository {
-    override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
-        .flowOn(Dispatchers.Default)
+    override val data = Pager(
+        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+        pagingSourceFactory = {
+            PostPagingSource(apiService)
+        }
+    ).flow
 
     override val newerCount: Flow<Int> = dao.getUnreadCount()
 
@@ -41,17 +50,18 @@ class PostRepositoryImpl @Inject constructor(
 
             val body = response.body() ?: throw ApiError(response.code(), response.message())
             //загруженные данные не показываем, если раньше не показывались
-            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
-            if (visibleListIsEmpty) {
-                dao.insert(body.toEntity())
-            } else {
-                val oldData = dao.getAllVisible().asLiveData().value
-                dao.insert(body.toEntity().map {
-                    it.copy(hidden = oldData?.find { oldPostEntity ->
-                        oldPostEntity.id == it.id
-                    }?.hidden ?: true)
-                })
-            }
+//            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
+//            if (visibleListIsEmpty) {
+//                dao.insert(body.toEntity())
+//            } else {
+//                val oldData = dao.getAllVisible().asLiveData().value
+//                dao.insert(body.toEntity().map {
+//                    it.copy(hidden = oldData?.find { oldPostEntity ->
+//                        oldPostEntity.id == it.id
+//                    }?.hidden ?: true)
+//                })
+//            }
+            dao.insert(body.toEntity())
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {
