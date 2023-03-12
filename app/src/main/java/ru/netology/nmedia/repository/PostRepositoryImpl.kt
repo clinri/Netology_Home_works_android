@@ -1,7 +1,7 @@
 package ru.netology.nmedia.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.*
 import arrow.core.Either
 import arrow.core.left
 import kotlinx.coroutines.CancellationException
@@ -30,14 +30,16 @@ import javax.inject.Inject
 
 class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
-    private val apiService: ApiService
-    ) : PostRepository {
-    override val data = Pager(
-        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
-        pagingSourceFactory = {
-            PostPagingSource(apiService)
-        }
+    private val apiService: ApiService,
+) : PostRepository {
+
+    @OptIn(ExperimentalPagingApi::class)
+    override val data: Flow<PagingData<Post>> = Pager(
+        config = PagingConfig(pageSize = 5, enablePlaceholders = false),
+        remoteMediator = PostRemoteMediator(apiService = apiService, postDao = dao),
+        pagingSourceFactory = dao.getPagingSource()
     ).flow
+        .map { it.map(PostEntity::toDto) }
 
     override val newerCount: Flow<Int> = dao.getUnreadCount()
 
