@@ -48,7 +48,7 @@ class PostViewModel @Inject constructor(
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
-    val newerCount = repository.newerCount.asLiveData()
+//    val newerCount = repository.newerCount.asLiveData()
 
     private val _errorGetNewer = SingleLiveEvent<Unit>()
     val errorGetNewer: LiveData<Unit>

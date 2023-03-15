@@ -2,18 +2,14 @@ package ru.netology.nmedia.repository
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.*
-import arrow.core.Either
-import arrow.core.left
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Media
@@ -27,21 +23,30 @@ import ru.netology.nmedia.error.UnknownError
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
     private val apiService: ApiService,
+    postRemoteKeyDao: PostRemoteKeyDao,
+    appDb: AppDb,
 ) : PostRepository {
 
     @OptIn(ExperimentalPagingApi::class)
     override val data: Flow<PagingData<Post>> = Pager(
-        config = PagingConfig(pageSize = 5, enablePlaceholders = false),
-        remoteMediator = PostRemoteMediator(apiService = apiService, postDao = dao),
-        pagingSourceFactory = dao.getPagingSource()
+        config = PagingConfig(pageSize = 25, enablePlaceholders = false),
+        pagingSourceFactory = { dao.getPagingSource() },
+        remoteMediator = PostRemoteMediator(
+            apiService = apiService,
+            postDao = dao,
+            postRemoteKeyDao = postRemoteKeyDao,
+            appDb = appDb
+        )
     ).flow
         .map { it.map(PostEntity::toDto) }
 
-    override val newerCount: Flow<Int> = dao.getUnreadCount()
+//    override val newerCount: Flow<Int> = dao.getUnreadCount()
 
     override suspend fun getAll() {
         try {
@@ -49,8 +54,7 @@ class PostRepositoryImpl @Inject constructor(
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
-
-            val body = response.body() ?: throw ApiError(response.code(), response.message())
+            val data = response.body() ?: throw ApiError(response.code(), response.message())
             //загруженные данные не показываем, если раньше не показывались
 //            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
 //            if (visibleListIsEmpty) {
@@ -63,7 +67,7 @@ class PostRepositoryImpl @Inject constructor(
 //                    }?.hidden ?: true)
 //                })
 //            }
-            dao.insert(body.toEntity())
+            dao.insert(data.toEntity())
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {
@@ -71,6 +75,7 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
+/*
     override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
         while (true) {
             delay(120_000L)
@@ -93,6 +98,7 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
         .flowOn(Dispatchers.Default)
+*/
 
     override suspend fun save(post: Post) {
         try {

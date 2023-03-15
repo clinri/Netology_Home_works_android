@@ -83,15 +83,15 @@ class FeedFragment : Fragment() {
             }
         }
 
-        viewModel.newerCount.observe(viewLifecycleOwner) {
-            println("Newer count: $it")
-            if (it > 0) {
-                binding.fabNewPosts.visibility = View.VISIBLE
-                binding.fabNewPosts.text = getString(R.string.new_posts, it)
-            } else {
-                binding.fabNewPosts.visibility = View.GONE
-            }
-        }
+//        viewModel.newerCount.observe(viewLifecycleOwner) {
+//            //println("Newer count: $it")
+//            if (it > 0) {
+//                binding.fabNewPosts.visibility = View.VISIBLE
+//                binding.fabNewPosts.text = getString(R.string.new_posts, it)
+//            } else {
+//                binding.fabNewPosts.visibility = View.GONE
+//            }
+//        }
 
         viewModel.errorGetNewer.observe(viewLifecycleOwner) {
             Snackbar.make(

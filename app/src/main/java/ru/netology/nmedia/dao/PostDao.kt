@@ -41,6 +41,9 @@ interface PostDao {
     @Query("UPDATE PostEntity SET hidden = 0")
     suspend fun readAll()
 
-    @Query("SELECT COUNT(*) FROM PostEntity WHERE hidden = 1")
-    fun getUnreadCount(): Flow<Int>
+//    @Query("SELECT COUNT(*) FROM PostEntity WHERE hidden = 1")
+//    fun getUnreadCount(): Flow<Int>
+
+    @Query("DELETE FROM PostEntity")
+    suspend fun clear()
 }
