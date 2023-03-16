@@ -84,7 +84,7 @@ class PostViewModel @Inject constructor(
         get() = _toDialogConfirmationFromFeedFragment
 
     init {
-        loadPosts()
+//        loadPosts()
 //        viewModelScope.launch {
 //            @OptIn(ExperimentalCoroutinesApi::class)
 //            repository.data.flatMapLatest { posts ->
