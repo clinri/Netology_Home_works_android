@@ -161,8 +161,6 @@ class FeedFragment : Fragment() {
                 R.id.action_feedFragment_to_confirmationLogOutDialog
             )
         }
-
         return binding.root
     }
-
 }

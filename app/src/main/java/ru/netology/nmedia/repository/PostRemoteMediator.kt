@@ -26,8 +26,12 @@ class PostRemoteMediator(
         try {
             val response = when (loadType) {
                 //пользователь делает свайп (для обновления списка)
+                // функционал как при попытке прокрутить вверх
                 LoadType.REFRESH -> {
-                    apiService.getLatest(state.config.pageSize)
+                    val id = postRemoteKeyDao.max() ?: return MediatorResult.Success(
+                        endOfPaginationReached = false
+                    )
+                    apiService.getAfter(id, state.config.pageSize)
                 }
                 //пользователь листает вниз
                 LoadType.APPEND -> {
@@ -37,11 +41,11 @@ class PostRemoteMediator(
                     apiService.getBefore(id, state.config.pageSize)
                 }
                 //пользователь листает веерх
+                //отключено
                 LoadType.PREPEND -> {
-                    val id = postRemoteKeyDao.max() ?: return MediatorResult.Success(
+                    return MediatorResult.Success(
                         endOfPaginationReached = false
                     )
-                    apiService.getAfter(id, state.config.pageSize)
                 }
             }
             if (!response.isSuccessful) {
@@ -52,26 +56,19 @@ class PostRemoteMediator(
                 response.code(),
                 response.message()
             )
+            println("+++++++++===========")
             println(data.size)
             println(loadType.name)
 
             appDb.withTransaction {
                 when (loadType) {
                     LoadType.REFRESH -> {
-                        postRemoteKeyDao.clear()
                         postRemoteKeyDao.insert(
-                            listOf(
-                                PostRemoteKeyEntity(
-                                    type = PostRemoteKeyEntity.KeyType.AFTER,
-                                    key = data.first().id
-                                ),
-                                PostRemoteKeyEntity(
-                                    type = PostRemoteKeyEntity.KeyType.BEFORE,
-                                    key = data.last().id
-                                )
+                            PostRemoteKeyEntity(
+                                type = PostRemoteKeyEntity.KeyType.AFTER,
+                                key = data.first().id
                             )
                         )
-                        postDao.clear()
                     }
                     LoadType.APPEND -> {
                         postRemoteKeyDao.insert(
@@ -81,14 +78,7 @@ class PostRemoteMediator(
                             )
                         )
                     }
-                    LoadType.PREPEND -> {
-                        postRemoteKeyDao.insert(
-                            PostRemoteKeyEntity(
-                                type = PostRemoteKeyEntity.KeyType.AFTER,
-                                key = data.first().id
-                            )
-                        )
-                    }
+                    else -> {}
                 }
                 postDao.insert(data.toEntity())
             }
