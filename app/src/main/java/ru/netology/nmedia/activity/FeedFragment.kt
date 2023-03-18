@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -78,7 +77,7 @@ class FeedFragment : Fragment() {
             binding.swiperefresh.isRefreshing = state.refreshing
             if (state.error) {
                 Snackbar.make(binding.root, R.string.error_loading, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.retry_loading) { viewModel.loadPosts() }
+                    .setAction(R.string.retry_loading) { adapter.retry() }
                     .show()
             }
         }
@@ -92,15 +91,15 @@ class FeedFragment : Fragment() {
 //                binding.fabNewPosts.visibility = View.GONE
 //            }
 //        }
-
-        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
-            Snackbar.make(
-                binding.root,
-                getString(R.string.error_get_newer_posts),
-                Snackbar.LENGTH_LONG
-            )
-                .show()
-        }
+//
+//        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
+//            Snackbar.make(
+//                binding.root,
+//                getString(R.string.error_get_newer_posts),
+//                Snackbar.LENGTH_LONG
+//            )
+//                .show()
+//        }
 
         viewModel.showOfferAuth.observe(viewLifecycleOwner) {
             findNavController().navigate(
@@ -118,11 +117,13 @@ class FeedFragment : Fragment() {
             }
         })
 */
+/*
 
         binding.fabNewPosts.setOnClickListener {
             viewModel.clickOnButtonNewPosts()
             binding.fabNewPosts.isGone = true
         }
+*/
 
         lifecycleScope.launchWhenCreated {
             viewModel.data.collectLatest {

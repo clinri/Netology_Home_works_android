@@ -49,10 +49,12 @@ class PostViewModel @Inject constructor(
         get() = _dataState
 
 //    val newerCount = repository.newerCount.asLiveData()
+/*
 
     private val _errorGetNewer = SingleLiveEvent<Unit>()
     val errorGetNewer: LiveData<Unit>
         get() = _errorGetNewer
+*/
 
     private val _media = MutableLiveData<MediaModel?>(null)
     val media: LiveData<MediaModel?>
@@ -112,6 +114,7 @@ class PostViewModel @Inject constructor(
         _media.value = null
     }
 
+/*
     fun clickOnButtonNewPosts() = viewModelScope.launch {
         try {
             repository.readAll()
@@ -119,8 +122,10 @@ class PostViewModel @Inject constructor(
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
 
+/*
     fun loadPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(loading = true)
@@ -130,6 +135,7 @@ class PostViewModel @Inject constructor(
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
 /*
     fun refreshPosts() = viewModelScope.launch {

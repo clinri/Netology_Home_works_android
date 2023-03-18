@@ -1,5 +1,6 @@
 package ru.netology.nmedia.repository
 
+import android.util.Log
 import androidx.paging.*
 import androidx.room.withTransaction
 import ru.netology.nmedia.api.ApiService
@@ -29,8 +30,9 @@ class PostRemoteMediator(
                 // функционал как при попытке прокрутить вверх
                 LoadType.REFRESH -> {
                     if (postDao.isEmpty()) {
-                        apiService.getLatest(state.config.initialLoadSize)
+                        apiService.getAfter(0L, state.config.initialLoadSize)
                     } else {
+                        Log.d("max_id", postRemoteKeyDao.max().toString())
                         val id = postRemoteKeyDao.max() ?: return MediatorResult.Success(
                             endOfPaginationReached = false
                         )
