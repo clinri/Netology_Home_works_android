@@ -30,7 +30,7 @@ class PostRemoteMediator(
                 // функционал как при попытке прокрутить вверх
                 LoadType.REFRESH -> {
                     if (postDao.isEmpty()) {
-                        apiService.getAfter(0L, state.config.initialLoadSize)
+                        apiService.getLatest(state.config.initialLoadSize)
                     } else {
                         Log.d("max_id", postRemoteKeyDao.max().toString())
                         val id = postRemoteKeyDao.max() ?: return MediatorResult.Success(
