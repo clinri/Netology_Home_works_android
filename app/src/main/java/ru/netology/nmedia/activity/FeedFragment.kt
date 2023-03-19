@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -82,24 +83,24 @@ class FeedFragment : Fragment() {
             }
         }
 
-//        viewModel.newerCount.observe(viewLifecycleOwner) {
-//            //println("Newer count: $it")
-//            if (it > 0) {
-//                binding.fabNewPosts.visibility = View.VISIBLE
-//                binding.fabNewPosts.text = getString(R.string.new_posts, it)
-//            } else {
-//                binding.fabNewPosts.visibility = View.GONE
-//            }
-//        }
-//
-//        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
-//            Snackbar.make(
-//                binding.root,
-//                getString(R.string.error_get_newer_posts),
-//                Snackbar.LENGTH_LONG
-//            )
-//                .show()
-//        }
+        viewModel.newerCount.observe(viewLifecycleOwner) {
+            println("Newer count: $it")
+            if (it > 0) {
+                binding.fabNewPosts.visibility = View.VISIBLE
+                binding.fabNewPosts.text = getString(R.string.new_posts, it)
+            } else {
+                binding.fabNewPosts.visibility = View.GONE
+            }
+        }
+
+        viewModel.errorGetNewer.observe(viewLifecycleOwner) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.error_get_newer_posts),
+                Snackbar.LENGTH_LONG
+            )
+                .show()
+        }
 
         viewModel.showOfferAuth.observe(viewLifecycleOwner) {
             findNavController().navigate(
@@ -117,13 +118,12 @@ class FeedFragment : Fragment() {
             }
         })
 */
-/*
 
         binding.fabNewPosts.setOnClickListener {
-            viewModel.clickOnButtonNewPosts()
+            adapter.refresh()
+//            viewModel.clickOnButtonNewPosts()
             binding.fabNewPosts.isGone = true
         }
-*/
 
         lifecycleScope.launchWhenCreated {
             viewModel.data.collectLatest {

@@ -4,12 +4,14 @@ import android.net.Uri
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import androidx.paging.map
+import arrow.core.Either
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
+import ru.netology.nmedia.dao.PostRemoteKeyDao
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
@@ -32,6 +34,7 @@ private val empty = Post(
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val repository: PostRepository,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
     private val appAuth: AppAuth,
 ) : ViewModel() {
 
@@ -48,13 +51,14 @@ class PostViewModel @Inject constructor(
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
-//    val newerCount = repository.newerCount.asLiveData()
-/*
+    //    val newerCount = repository.newerCount.asLiveData()
+    private val _newerCount = SingleLiveEvent<Int>()
+    val newerCount: LiveData<Int>
+        get() = _newerCount
 
     private val _errorGetNewer = SingleLiveEvent<Unit>()
     val errorGetNewer: LiveData<Unit>
         get() = _errorGetNewer
-*/
 
     private val _media = MutableLiveData<MediaModel?>(null)
     val media: LiveData<MediaModel?>
@@ -87,23 +91,24 @@ class PostViewModel @Inject constructor(
 
     init {
 //        loadPosts()
-//        viewModelScope.launch {
-//            @OptIn(ExperimentalCoroutinesApi::class)
-//            repository.data.flatMapLatest { posts ->
-//                val latestPostId = posts.firstOrNull()?.id ?: 0L
-//                repository.requestNewer(latestPostId).mapNotNull { either ->
-//                    when (either) {
-//                        is Either.Left -> {
-//                            either.value
-//                        }
-//                        is Either.Right -> null
-//                    }
-//                }
-//            }.collect {
-//                // уведомление об ошибке при загрузке новых постов
-//                _errorGetNewer.value = Unit
-//            }
-//        }
+        viewModelScope.launch {
+            repository.requestNewerCount(postRemoteKeyDao.max() ?: 0L).mapNotNull { either ->
+                when (either) {
+                    is Either.Left -> either.value
+                    is Either.Right -> either.value
+                }
+            }.collect {
+                when (it) {
+                    is Exception -> {
+                        // уведомление об ошибке при загрузке новых постов
+                        _errorGetNewer.value = Unit
+                    }
+                    is Int -> {
+                        _newerCount.value = it
+                    }
+                }
+            }
+        }
     }
 
     fun changePhoto(uri: Uri, file: File) {

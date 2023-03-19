@@ -1,7 +1,16 @@
 package ru.netology.nmedia.repository
 
+import android.util.Log
 import androidx.paging.*
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -14,7 +23,6 @@ import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
-import ru.netology.nmedia.entity.toEntity
 import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.error.AppError
 import ru.netology.nmedia.error.NetworkError
@@ -47,13 +55,13 @@ class PostRepositoryImpl @Inject constructor(
 
 //    override val newerCount: Flow<Int> = dao.getUnreadCount()
 
-    override suspend fun getAll() {
-        try {
-            val response = apiService.getAll()
-            if (!response.isSuccessful) {
-                throw ApiError(response.code(), response.message())
-            }
-            val data = response.body() ?: throw ApiError(response.code(), response.message())
+//    override suspend fun getAll() {
+//        try {
+//            val response = apiService.getAll()
+//            if (!response.isSuccessful) {
+//                throw ApiError(response.code(), response.message())
+//            }
+//            val data = response.body() ?: throw ApiError(response.code(), response.message())
             //загруженные данные не показываем, если раньше не показывались
 //            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
 //            if (visibleListIsEmpty) {
@@ -66,27 +74,25 @@ class PostRepositoryImpl @Inject constructor(
 //                    }?.hidden ?: true)
 //                })
 //            }
-            dao.insert(data.toEntity())
-        } catch (e: IOException) {
-            throw NetworkError
-        } catch (e: Exception) {
-            throw UnknownError
-        }
-    }
+//            dao.insert(data.toEntity())
+//        } catch (e: IOException) {
+//            throw NetworkError
+//        } catch (e: Exception) {
+//            throw UnknownError
+//        }
+//    }
 
-/*
-    override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
+    override fun requestNewerCount(latestId: Long): Flow<Either<Exception, Int>> = flow {
         while (true) {
-            delay(120_000L)
+            delay(10_000L)
             try {
-                val response = apiService.getNewer(latestId)
+                val response = apiService.getNewerCount(latestId)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
                 val body = response.body() ?: throw ApiError(response.code(), response.message())
-                dao.insert(body.toEntity().map {
-                    it.copy(hidden = true)
-                })
+                Log.d("newerCount", body.toString())
+                emit(body.count.right())
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
@@ -97,7 +103,6 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
         .flowOn(Dispatchers.Default)
-*/
 
     override suspend fun save(post: Post) {
         try {
@@ -180,6 +185,7 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
+/*
     override suspend fun readAll() {
         try {
             dao.readAll()
@@ -187,6 +193,7 @@ class PostRepositoryImpl @Inject constructor(
             throw UnknownError
         }
     }
+*/
 
     override suspend fun uploadMedia(media: MediaModel): Media = try {
         val part = MultipartBody.Part.createFormData(
