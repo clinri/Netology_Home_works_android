@@ -78,7 +78,7 @@ class FeedFragment : Fragment() {
             binding.swiperefresh.isRefreshing = state.refreshing
             if (state.error) {
                 Snackbar.make(binding.root, R.string.error_loading, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.retry_loading) { viewModel.loadPosts() }
+                    .setAction(R.string.retry_loading) { adapter.retry() }
                     .show()
             }
         }
@@ -120,7 +120,8 @@ class FeedFragment : Fragment() {
 */
 
         binding.fabNewPosts.setOnClickListener {
-            viewModel.clickOnButtonNewPosts()
+            adapter.refresh()
+//            viewModel.clickOnButtonNewPosts()
             binding.fabNewPosts.isGone = true
         }
 
@@ -161,8 +162,6 @@ class FeedFragment : Fragment() {
                 R.id.action_feedFragment_to_confirmationLogOutDialog
             )
         }
-
         return binding.root
     }
-
 }

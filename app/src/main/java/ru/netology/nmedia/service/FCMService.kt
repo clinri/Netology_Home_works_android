@@ -51,7 +51,7 @@ class FCMService : FirebaseMessagingService() {
         val contentInPushMessage = gson.fromJson(pushMessage, PushMessage::class.java).content
         println("idInPushMessage = $recipientIdInPushMessage")
         println("contentInPushMessage = $contentInPushMessage")
-        val currentId = appAuth.authStateFlow.value?.id
+        val currentId = appAuth.authStateFlow.value.id
 
         when {
             //если recipientId = null, то это массовая рассылка, показываете Notification.
