@@ -22,7 +22,6 @@ class ConfirmationLogoutDialog : DialogFragment() {
             postViewModel.logoutFromNewPostFragment()
         }
         postViewModel.backToFeedFragmentFromDialogConfirmation.observe(this){
-            postViewModel.loadPosts()
             findNavController().navigate(
                 R.id.action_confirmationLogOutDialog_to_feedFragment
             )
