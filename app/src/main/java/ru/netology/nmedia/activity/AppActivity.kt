@@ -99,7 +99,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     menuInflater.inflate(R.menu.menu_auth, menu)
                     menu.setGroupVisible(R.id.unauthorized, !authViewModel.authorized)
                     menu.setGroupVisible(R.id.authorized, authViewModel.authorized)
-                    authViewModel.authorized
                 }
 
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean =

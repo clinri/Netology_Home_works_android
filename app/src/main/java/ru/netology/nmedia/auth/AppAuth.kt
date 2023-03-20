@@ -29,14 +29,14 @@ class AppAuth @Inject constructor(
     private val tokenKey = "token"
     private val idKey = "id"
 
-    private val _authStateFlow: MutableStateFlow<AuthModel?>
+    private val _authStateFlow: MutableStateFlow<AuthModel>
 
     init {
         val token = prefs.getString(tokenKey, null)
         val id = prefs.getLong(idKey, 0)
 
         if (token == null || id == 0L) {
-            _authStateFlow = MutableStateFlow(null)
+            _authStateFlow = MutableStateFlow(AuthModel())
             prefs.edit { clear() }
         } else {
             _authStateFlow = MutableStateFlow(AuthModel(id, token))
@@ -58,7 +58,7 @@ class AppAuth @Inject constructor(
 
     @Synchronized
     fun removeAuth() {
-        _authStateFlow.value = null
+        _authStateFlow.value = AuthModel()
         prefs.edit {
             clear()
         }
