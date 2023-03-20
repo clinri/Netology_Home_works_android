@@ -1,49 +1,33 @@
 package ru.netology.nmedia.api
 
 import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
 import okhttp3.RequestBody
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
-import ru.netology.nmedia.BuildConfig
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Media
+import ru.netology.nmedia.dto.NewerCount
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
 
-private const val BASE_URL = "${BuildConfig.BASE_URL}/api/slow/"
-
-private val logging = HttpLoggingInterceptor().apply {
-    if (BuildConfig.DEBUG) {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-}
-
-private val okhttp = OkHttpClient.Builder()
-    .addInterceptor(logging)
-    .addInterceptor{ chain ->
-        val request = AppAuth.getInstance().authStateFlow.value?.token?.let {
-            chain.request().newBuilder()
-                .addHeader("Authorization", it)
-                .build()
-        } ?: chain.request()
-        chain.proceed(request)
-    }
-    .build()
-
-private val retrofit = Retrofit.Builder()
-    .addConverterFactory(GsonConverterFactory.create())
-    .baseUrl(BASE_URL)
-    .client(okhttp)
-    .build()
-
 interface ApiService {
-    @GET("posts")
-    suspend fun getAll(): Response<List<Post>>
+//    @GET("posts")
+//    suspend fun getAll(): Response<List<Post>>
+
+    @GET("posts/latest")
+    suspend fun getLatest(@Query("count") count: Int): Response<List<Post>>
+
+    @GET("posts/{id}/before")
+    suspend fun getBefore(
+        @Path("id") id: Long,
+        @Query("count") count: Int,
+    ): Response<List<Post>>
+
+    @GET("posts/{id}/after")
+    suspend fun getAfter(
+        @Path("id") id: Long,
+        @Query("count") count: Int,
+    ): Response<List<Post>>
 
     @GET("posts/{id}")
     suspend fun getById(@Path("id") id: Long): Response<Post>
@@ -62,6 +46,9 @@ interface ApiService {
 
     @DELETE("posts/{id}/likes")
     suspend fun dislikeById(@Path("id") id: Long): Response<Post>
+
+    @GET("posts/{id}/newer-count")
+    suspend fun getNewerCount(@Path("id") id: Long): Response<NewerCount>
 
     @Multipart
     @POST("media")
@@ -93,10 +80,4 @@ interface ApiService {
 
     @POST("users/push-tokens")
     suspend fun sendPushToken(@Body token: PushToken): Response<Unit>
-}
-
-object RetrofitApi {
-    val service: ApiService by lazy {
-        retrofit.create(ApiService::class.java)
-    }
 }

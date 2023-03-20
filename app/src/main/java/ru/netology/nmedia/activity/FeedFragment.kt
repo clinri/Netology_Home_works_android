@@ -9,9 +9,12 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
+import androidx.paging.LoadState
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
@@ -20,6 +23,7 @@ import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.util.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
 
+@AndroidEntryPoint
 class FeedFragment : Fragment() {
 
     companion object {
@@ -74,7 +78,7 @@ class FeedFragment : Fragment() {
             binding.swiperefresh.isRefreshing = state.refreshing
             if (state.error) {
                 Snackbar.make(binding.root, R.string.error_loading, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.retry_loading) { viewModel.loadPosts() }
+                    .setAction(R.string.retry_loading) { adapter.retry() }
                     .show()
             }
         }
@@ -98,12 +102,14 @@ class FeedFragment : Fragment() {
                 .show()
         }
 
-        viewModel.showOfferAuth.observe(viewLifecycleOwner){
+        viewModel.showOfferAuth.observe(viewLifecycleOwner) {
             findNavController().navigate(
                 R.id.action_feedFragment_to_offerAuthDialog
             )
         }
 
+        //автоматическая прокрутка вверх списка при изменении количества элементов
+/*
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 if (positionStart == 0) {
@@ -111,41 +117,51 @@ class FeedFragment : Fragment() {
                 }
             }
         })
+*/
 
         binding.fabNewPosts.setOnClickListener {
-            viewModel.clickOnButtonNewPosts()
+            adapter.refresh()
+//            viewModel.clickOnButtonNewPosts()
             binding.fabNewPosts.isGone = true
         }
 
-        viewModel.data.observe(viewLifecycleOwner) { state ->
-            adapter.submitList(state.posts)
-            binding.emptyText.isVisible = state.empty
+        lifecycleScope.launchWhenCreated {
+            viewModel.data.collectLatest {
+                adapter.submitData(it)
+            }
+        }
+
+        lifecycleScope.launchWhenCreated {
+            adapter.loadStateFlow.collectLatest {
+                binding.swiperefresh.isRefreshing = it.refresh is LoadState.Loading
+                        || it.append is LoadState.Loading
+                        || it.prepend is LoadState.Loading
+            }
         }
 
         binding.swiperefresh.setOnRefreshListener {
-            viewModel.refreshPosts()
+            adapter.refresh()
         }
 
         binding.fab.setOnClickListener {
             viewModel.onFabClicked()
         }
 
-        viewModel.showFragmentPostCreate.observe(viewLifecycleOwner){
+        viewModel.showFragmentPostCreate.observe(viewLifecycleOwner) {
             findNavController().navigate(
-                R.id.action_feedFragment_to_newPostFragment)
+                R.id.action_feedFragment_to_newPostFragment
+            )
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) {
             findNavController().navigateUp()
         }
 
-        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner){
+        viewModel.toDialogConfirmationFromFeedFragment.observe(viewLifecycleOwner) {
             findNavController().navigate(
                 R.id.action_feedFragment_to_confirmationLogOutDialog
             )
         }
-
         return binding.root
     }
-
 }

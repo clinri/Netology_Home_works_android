@@ -1,72 +1,98 @@
 package ru.netology.nmedia.repository
 
-import androidx.lifecycle.*
+import android.util.Log
+import androidx.paging.*
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import ru.netology.nmedia.api.*
+import ru.netology.nmedia.api.ApiService
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
-import ru.netology.nmedia.entity.toDto
-import ru.netology.nmedia.entity.toEntity
-import ru.netology.nmedia.error.*
+import ru.netology.nmedia.error.ApiError
+import ru.netology.nmedia.error.AppError
+import ru.netology.nmedia.error.NetworkError
+import ru.netology.nmedia.error.UnknownError
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
-    override val data = dao.getAllVisible().map(List<PostEntity>::toDto)
-        .flowOn(Dispatchers.Default)
+@Singleton
+class PostRepositoryImpl @Inject constructor(
+    private val dao: PostDao,
+    private val apiService: ApiService,
+    postRemoteKeyDao: PostRemoteKeyDao,
+    appDb: AppDb,
+) : PostRepository {
 
-    override val newerCount: Flow<Int> = dao.getUnreadCount()
+    @OptIn(ExperimentalPagingApi::class)
+    override val data: Flow<PagingData<Post>> = Pager(
+        config = PagingConfig(pageSize = 5, enablePlaceholders = false),
+        pagingSourceFactory = { dao.getPagingSource() },
+        remoteMediator = PostRemoteMediator(
+            apiService = apiService,
+            postDao = dao,
+            postRemoteKeyDao = postRemoteKeyDao,
+            appDb = appDb
+        )
+    ).flow
+        .map { it.map(PostEntity::toDto) }
 
-    override suspend fun getAll() {
-        try {
-            val response = RetrofitApi.service.getAll()
-            if (!response.isSuccessful) {
-                throw ApiError(response.code(), response.message())
-            }
+//    override val newerCount: Flow<Int> = dao.getUnreadCount()
 
-            val body = response.body() ?: throw ApiError(response.code(), response.message())
+//    override suspend fun getAll() {
+//        try {
+//            val response = apiService.getAll()
+//            if (!response.isSuccessful) {
+//                throw ApiError(response.code(), response.message())
+//            }
+//            val data = response.body() ?: throw ApiError(response.code(), response.message())
             //загруженные данные не показываем, если раньше не показывались
-            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
-            if (visibleListIsEmpty) {
-                dao.insert(body.toEntity())
-            } else {
-                val oldData = dao.getAllVisible().asLiveData().value
-                dao.insert(body.toEntity().map {
-                    it.copy(hidden = oldData?.find { oldPostEntity ->
-                        oldPostEntity.id == it.id
-                    }?.hidden ?: true)
-                })
-            }
-        } catch (e: IOException) {
-            throw NetworkError
-        } catch (e: Exception) {
-            throw UnknownError
-        }
-    }
+//            val visibleListIsEmpty = data.asLiveData().value?.isEmpty() ?: true
+//            if (visibleListIsEmpty) {
+//                dao.insert(body.toEntity())
+//            } else {
+//                val oldData = dao.getAllVisible().asLiveData().value
+//                dao.insert(body.toEntity().map {
+//                    it.copy(hidden = oldData?.find { oldPostEntity ->
+//                        oldPostEntity.id == it.id
+//                    }?.hidden ?: true)
+//                })
+//            }
+//            dao.insert(data.toEntity())
+//        } catch (e: IOException) {
+//            throw NetworkError
+//        } catch (e: Exception) {
+//            throw UnknownError
+//        }
+//    }
 
-    override fun requestNewer(latestId: Long): Flow<Either<Exception, Nothing>> = flow {
+    override fun requestNewerCount(latestId: Long): Flow<Either<Exception, Int>> = flow {
         while (true) {
             delay(10_000L)
             try {
-                val response = RetrofitApi.service.getNewer(latestId)
+                val response = apiService.getNewerCount(latestId)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }
                 val body = response.body() ?: throw ApiError(response.code(), response.message())
-                dao.insert(body.toEntity().map {
-                    it.copy(hidden = true)
-                })
+                Log.d("newerCount", body.toString())
+                emit(body.count.right())
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
@@ -80,7 +106,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun save(post: Post) {
         try {
-            val response = RetrofitApi.service.save(post)
+            val response = apiService.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -116,7 +142,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала удаляем запись в локальной БД.
             dao.removeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.removeById(id)
+            val response = apiService.removeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -132,7 +158,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала модифицируем запись в локальной БД.
             dao.likeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.likeById(id)
+            val response = apiService.likeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -148,7 +174,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             //Сначала модифицируем запись в локальной БД.
             dao.likeById(id)
             //После удаления из БД отправляем соответствующий запрос в API (HTTP).
-            val response = RetrofitApi.service.dislikeById(id)
+            val response = apiService.dislikeById(id)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
@@ -159,6 +185,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
+/*
     override suspend fun readAll() {
         try {
             dao.readAll()
@@ -166,6 +193,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             throw UnknownError
         }
     }
+*/
 
     override suspend fun uploadMedia(media: MediaModel): Media = try {
         val part = MultipartBody.Part.createFormData(
@@ -173,7 +201,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             filename = media.file.name,
             body = media.file.asRequestBody()
         )
-        val response = RetrofitApi.service.uploadMedia(part)
+        val response = apiService.uploadMedia(part)
         if (!response.isSuccessful) {
             throw ApiError(response.code(), response.message())
         }

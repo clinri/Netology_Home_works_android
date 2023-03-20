@@ -1,25 +1,24 @@
 package ru.netology.nmedia.viewmodel
 
-import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.*
+import androidx.paging.PagingData
+import androidx.paging.map
 import arrow.core.Either
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
-import ru.netology.nmedia.db.AppDb
+import ru.netology.nmedia.dao.PostRemoteKeyDao
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.PostRepository
-import ru.netology.nmedia.repository.PostRepositoryImpl
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
+import javax.inject.Inject
 
 private val empty = Post(
     id = 0,
@@ -32,26 +31,30 @@ private val empty = Post(
     published = ""
 )
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
-    // упрощённый вариант
-    private val repository: PostRepository =
-        PostRepositoryImpl(AppDb.getInstance(context = application).postDao())
+@HiltViewModel
+class PostViewModel @Inject constructor(
+    private val repository: PostRepository,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
+    private val appAuth: AppAuth,
+) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> = AppAuth.getInstance().authStateFlow.flatMapLatest { authState ->
-        repository.data
-            .map { posts ->
-                FeedModel(posts.map {
-                    it.copy(ownedByMe = authState?.id == it.authorId)
-                }, posts.isEmpty())
-            }
-    }.asLiveData(Dispatchers.Default)
+    val data: Flow<PagingData<Post>> = appAuth.authStateFlow
+        .flatMapLatest { (myId, _) ->
+            repository.data
+                .map { posts ->
+                    posts.map { it.copy(ownedByMe = it.authorId == myId) }
+                }
+        }.flowOn(Dispatchers.Default)
 
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>
         get() = _dataState
 
-    val newerCount = repository.newerCount.asLiveData()
+    //    val newerCount = repository.newerCount.asLiveData()
+    private val _newerCount = SingleLiveEvent<Int>()
+    val newerCount: LiveData<Int>
+        get() = _newerCount
 
     private val _errorGetNewer = SingleLiveEvent<Unit>()
     val errorGetNewer: LiveData<Unit>
@@ -87,22 +90,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         get() = _toDialogConfirmationFromFeedFragment
 
     init {
-        loadPosts()
+//        loadPosts()
         viewModelScope.launch {
-            @OptIn(ExperimentalCoroutinesApi::class)
-            repository.data.flatMapLatest { posts ->
-                val latestPostId = posts.firstOrNull()?.id ?: 0L
-                repository.requestNewer(latestPostId).mapNotNull { either ->
-                    when (either) {
-                        is Either.Left -> {
-                            either.value
-                        }
-                        is Either.Right -> null
-                    }
+            repository.requestNewerCount(postRemoteKeyDao.max() ?: 0L).mapNotNull { either ->
+                when (either) {
+                    is Either.Left -> either.value
+                    is Either.Right -> either.value
                 }
             }.collect {
-                // уведомление об ошибке при загрузке новых постов
-                _errorGetNewer.value = Unit
+                when (it) {
+                    is Exception -> {
+                        // уведомление об ошибке при загрузке новых постов
+                        _errorGetNewer.value = Unit
+                    }
+                    is Int -> {
+                        _newerCount.value = it
+                    }
+                }
             }
         }
     }
@@ -115,6 +119,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _media.value = null
     }
 
+/*
     fun clickOnButtonNewPosts() = viewModelScope.launch {
         try {
             repository.readAll()
@@ -122,8 +127,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
 
+/*
     fun loadPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(loading = true)
@@ -133,7 +140,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
+/*
     fun refreshPosts() = viewModelScope.launch {
         try {
             _dataState.value = FeedModelState(refreshing = true)
@@ -143,6 +152,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _dataState.value = FeedModelState(error = true)
         }
     }
+*/
 
     fun save() {
         edited.value?.let { post ->
@@ -176,20 +186,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun like(post: Post) {
-        AppAuth.getInstance().authStateFlow.value?.let {
-            viewModelScope.launch {
-                try {
-                    if (!post.likedByMe) {
-                        repository.likeById(post.id)
-                    } else {
-                        repository.dislikeById(post.id)
+        appAuth.authStateFlow.value.let {
+            val notAuth = it.token == null || it.id == 0L
+            if (!notAuth) {
+                viewModelScope.launch {
+                    try {
+                        if (!post.likedByMe) {
+                            repository.likeById(post.id)
+                        } else {
+                            repository.dislikeById(post.id)
+                        }
+                    } catch (e: Exception) {
+                        _dataState.value = FeedModelState(error = true)
                     }
-                } catch (e: Exception) {
-                    _dataState.value = FeedModelState(error = true)
                 }
+            } else {
+                _showOfferAuth.value = Unit
             }
-        } ?: let {
-            _showOfferAuth.value = Unit
         }
     }
 
@@ -202,15 +215,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onFabClicked() {
-        AppAuth.getInstance().authStateFlow.value?.let {
+        if (appAuth.authStateFlow.value.id != 0L) {
             _showFragmentPostCreate.value = Unit
-        } ?: let {
+        } else {
             _showOfferAuth.value = Unit
         }
     }
 
     fun logoutFromNewPostFragment() {
-        AppAuth.getInstance().removeAuth()
+        appAuth.removeAuth()
         _backToFeedFragmentFromDialogConfirmation.value = Unit
     }
 

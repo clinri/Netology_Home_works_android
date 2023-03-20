@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'dagger.hilt.android.plugin'
 
 android {
     compileSdkVersion 33
@@ -46,7 +47,7 @@ android {
 
 dependencies {
     def core_version = "1.9.0"
-    def appcompat_version = "1.6.1"
+    def appcompat_version = "1.5.1"
     def constraintlayout_version = "2.1.4"
     def swiperefreshlayout_version = "1.1.0"
     def coordinatorlayout_version = "1.2.0"
@@ -54,20 +55,21 @@ dependencies {
     def junit_version = "4.13.2"
     def ext_junit_version = "1.1.5"
     def espresso_core_version = "3.5.1"
-    def activity_version = "1.6.1"
+    def activity_version = "1.6.0"
     def lifecycle_version = "2.5.1"
-    def mdc_version = "1.8.0"
-    def nav_version = "2.5.3"
-    def room_version = "2.5.0"
+    def mdc_version = "1.6.1"
+    def nav_version = "2.5.2"
+    def room_version = "2.4.3"
     def firebase_version = "31.2.2"
     def glide_version = "4.14.2"
     def retrofit_version = "2.9.0"
     def retrofitgson_version = "2.9.0"
     def okhttplogging_version = "4.10.0"
     def coroutines_version = "1.6.4"
-    def play_services_base_version = "18.2.0"
+    def play_services_base_version = "18.1.0"
     def arrow_version = "1.1.5"
     def imagepicker_version = "2.1"
+    def paging_version = "3.1.1"
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "androidx.core:core-ktx:$core_version"
@@ -80,11 +82,12 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation  "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
     implementation "com.google.android.material:material:$mdc_version"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-paging:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
     implementation platform("com.google.firebase:firebase-bom:$firebase_version")
@@ -98,6 +101,9 @@ dependencies {
     implementation "com.google.android.gms:play-services-base:$play_services_base_version"
     implementation "io.arrow-kt:arrow-core:$arrow_version"
     implementation "com.github.dhaval2404:imagepicker:$imagepicker_version"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
 
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
