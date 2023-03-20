@@ -1,6 +1,5 @@
 package ru.netology.nmedia.repository
 
-import android.util.Log
 import androidx.paging.*
 import androidx.room.withTransaction
 import ru.netology.nmedia.api.ApiService
@@ -32,7 +31,6 @@ class PostRemoteMediator(
                     if (postDao.isEmpty()) {
                         apiService.getLatest(state.config.initialLoadSize)
                     } else {
-                        Log.d("max_id", postRemoteKeyDao.max().toString())
                         val id = postRemoteKeyDao.max() ?: return MediatorResult.Success(
                             endOfPaginationReached = false
                         )
@@ -63,9 +61,6 @@ class PostRemoteMediator(
                 response.code(),
                 response.message()
             )
-            println("+++++++++===========")
-            println(data.size)
-            println(loadType.name)
 
             appDb.withTransaction {
                 when (loadType) {
