@@ -26,7 +26,7 @@ class AuthViewModel @Inject constructor(
 
     val authorized: Boolean
         get() {
-            val id = appAuth.authStateFlow.value?.id ?: 0L
+            val id = appAuth.authStateFlow.value.id
             return id != 0L
         }
 
@@ -50,7 +50,7 @@ class AuthViewModel @Inject constructor(
                     _errorAuth.value = Unit
                     result
                 }
-                result?.let { appAuth.setAuth(it.id, it.token) }
+                result?.let { appAuth.setAuth(it.id, it.token ?: "") }
                 _tryAuth.value = Unit
             } catch (e: IOException) {
                 _errorAuth.value = Unit

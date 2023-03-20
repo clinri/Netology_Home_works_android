@@ -17,7 +17,7 @@ data class PostEntity(
     val published: String,
     val likedByMe: Boolean,
     val likes: Int = 0,
-    val hidden: Boolean = false,
+//    val hidden: Boolean = false,
     @Embedded
     var attachment: Attachment?,
 ) {

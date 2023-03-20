@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, Home_work_#14_pushes_before_Task_#1_RecipientId ]
+    branches: [ master, Home_work_#03_arch_Task_#1_Refresh_to_Prepend ]
 
 jobs:
   build:

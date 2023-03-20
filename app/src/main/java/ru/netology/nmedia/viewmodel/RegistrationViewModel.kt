@@ -29,7 +29,7 @@ class RegistrationViewModel @Inject constructor(
 
     val authorized: Boolean
         get() {
-            val id = appAuth.authStateFlow.value?.id ?: 0L
+            val id = appAuth.authStateFlow.value.id
             return id != 0L
         }
 
@@ -76,7 +76,7 @@ class RegistrationViewModel @Inject constructor(
                     _errorRegistration.value = Unit
                     result
                 }
-                result?.let { appAuth.setAuth(it.id, it.token) }
+                result?.let { appAuth.setAuth(it.id, it.token ?: "") }
                 _tryRegistration.value = Unit
             } catch (e: IOException) {
                 _errorRegistration.value = Unit
@@ -116,7 +116,7 @@ class RegistrationViewModel @Inject constructor(
                     _errorRegistration.value = Unit
                     result
                 }
-                result?.let { appAuth.setAuth(it.id, it.token) }
+                result?.let { appAuth.setAuth(it.id, it.token ?: "") }
                 _tryRegistration.value = Unit
             } catch (e: IOException) {
                 _errorRegistration.value = Unit
