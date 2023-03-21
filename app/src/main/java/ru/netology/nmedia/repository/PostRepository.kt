@@ -10,7 +10,7 @@ import ru.netology.nmedia.model.MediaModel
 interface PostRepository {
     val data: Flow<PagingData<Post>>
 //    val newerCount: Flow<Int>
-    fun requestNewerCount(latestId: Long): Flow<Either<Exception, Int>>
+    fun requestNewerCount(): Flow<Either<Exception, Int>>
 //    suspend fun getAll()
     suspend fun save(post: Post)
     suspend fun saveWithAttachment(post: Post, mediaModel: MediaModel)

@@ -36,7 +36,7 @@ import javax.inject.Singleton
 class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
     private val apiService: ApiService,
-    postRemoteKeyDao: PostRemoteKeyDao,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
     appDb: AppDb,
 ) : PostRepository {
 
@@ -82,11 +82,11 @@ class PostRepositoryImpl @Inject constructor(
 //        }
 //    }
 
-    override fun requestNewerCount(latestId: Long): Flow<Either<Exception, Int>> = flow {
+    override fun requestNewerCount(): Flow<Either<Exception, Int>> = flow {
         while (true) {
             delay(10_000L)
             try {
-                val response = apiService.getNewerCount(latestId)
+                val response = apiService.getNewerCount(postRemoteKeyDao.max() ?: 0L)
                 if (!response.isSuccessful) {
                     throw ApiError(response.code(), response.message())
                 }

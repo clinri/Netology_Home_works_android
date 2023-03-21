@@ -11,7 +11,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
-import ru.netology.nmedia.dao.PostRemoteKeyDao
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
@@ -34,7 +33,6 @@ private val empty = Post(
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val repository: PostRepository,
-    private val postRemoteKeyDao: PostRemoteKeyDao,
     private val appAuth: AppAuth,
 ) : ViewModel() {
 
@@ -92,7 +90,7 @@ class PostViewModel @Inject constructor(
     init {
 //        loadPosts()
         viewModelScope.launch {
-            repository.requestNewerCount(postRemoteKeyDao.max() ?: 0L).mapNotNull { either ->
+            repository.requestNewerCount().mapNotNull { either ->
                 when (either) {
                     is Either.Left -> either.value
                     is Either.Right -> either.value
