@@ -44,4 +44,5 @@
     <string name="add_avatar" translatable="false">Add avatar</string>
     <string name="notification_for_recipient_login_user" translatable="false">Notification for user %d</string>
     <string name="notification_for_all" translatable="false">Notification for all</string>
+    <string name="retry" translatable="false">Retry</string>
 </resources>
