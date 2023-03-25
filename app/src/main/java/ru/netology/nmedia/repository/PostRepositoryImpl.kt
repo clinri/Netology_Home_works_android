@@ -26,6 +26,7 @@ import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
 import ru.netology.nmedia.model.MediaModel
 import java.io.IOException
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
@@ -57,6 +58,26 @@ class PostRepositoryImpl @Inject constructor(
                     null
                 }
             }
+            .insertSeparators { before, _ ->
+                if (before == null) {
+                    // we're at the beginning of the list
+                    return@insertSeparators Separator(
+                        Random.nextLong(), "Today"
+                    )
+                }
+                if (before is Post) {
+                    return@insertSeparators Separator(
+                        Random.nextLong(),
+                        "sometime"
+
+                    )
+                }
+                return@insertSeparators  null
+            }
+    }
+
+    private fun roundedDaysCount(){
+
     }
 
 //    override val newerCount: Flow<Int> = dao.getUnreadCount()
