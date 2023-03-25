@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, 04_recycler_before_Task_#1_Paging_Refresh_Prepend_&_Append ]
+    branches: [ master, 04_recycler_Task_#1_Paging_Refresh_Prepend_&_Append ]
 
 jobs:
   build:
