@@ -22,6 +22,11 @@ data class Ad(
     val image: String,
 ) : FeedItem
 
+data class Separator(
+    override val id: Long,
+    val nameSeparator: String
+) : FeedItem
+
 data class Attachment(
     val url: String,
     val type: AttachmentType,
