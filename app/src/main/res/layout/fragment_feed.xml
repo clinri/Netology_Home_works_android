@@ -5,19 +5,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <Button
         android:id="@+id/fab_new_posts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|center"
+        android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
-        android:clickable="true"
-        android:contentDescription="@string/new_posts"
-        android:focusable="true"
+        android:alpha="0.5"
+        android:backgroundTint="#03A9F4"
+        android:drawableTop="@drawable/ic_arrow_up_24dp"
+        android:drawablePadding="10dp"
         android:text="@string/new_posts"
-        android:visibility="gone"
-        app:backgroundTint="#03A9F4"
-        app:icon="@drawable/ic_arrow_up_24dp" />
+        android:textColor="@color/colorText"
+        android:visibility="gone" />
+
+    <!--    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton-->
+    <!--        android:id="@+id/fab_new_posts"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_gravity="top|end"-->
+    <!--        android:layout_margin="@dimen/fab_margin"-->
+    <!--        android:clickable="true"-->
+    <!--        android:alpha="0.5"-->
+    <!--        android:contentDescription="@string/new_posts"-->
+    <!--        android:focusable="true"-->
+    <!--        android:text="@string/new_posts"-->
+    <!--        android:visibility="visible"-->
+    <!--        app:backgroundTint="#03A9F4"-->
+    <!--        app:icon="@drawable/ic_arrow_up_24dp" />-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -65,11 +80,11 @@
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:clickable="true"
         android:contentDescription="@string/add_post"
         android:focusable="true"
-        android:layout_gravity="bottom|end"
         app:srcCompat="@drawable/ic_add_24dp" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
